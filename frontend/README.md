@@ -1,16 +1,54 @@
-# React + Vite
+# Frontend - Cafetería
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Interfaz de la tienda hecha con React + Vite.
 
-Currently, two official plugins are available:
+## Requisitos
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+- Node.js (versión LTS)
+- npm (viene con Node.js)
 
-## React Compiler
+## Cómo ejecutarlo
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+Desde la carpeta `frontend`:
 
-## Expanding the ESLint configuration
+```bash
+npm install
+npm run dev
+```
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+Luego abrir http://localhost:5173 en el navegador.
+
+## Comandos
+
+| Comando | Qué hace |
+|---|---|
+| `npm run dev` | Levanta el proyecto en modo desarrollo |
+| `npm run build` | Genera la versión para publicar en la carpeta `dist` |
+| `npm run preview` | Muestra la versión generada con `build` |
+| `npm run lint` | Revisa el código con ESLint |
+
+## Estructura
+
+```
+src/
+  components/   Navbar y Footer
+  pages/        Una página por ruta
+  App.jsx       Rutas de la aplicación
+  main.jsx      Punto de entrada
+```
+
+## Rutas
+
+| Ruta | Página |
+|---|---|
+| `/` | Inicio |
+| `/catalogo` | Catálogo |
+| `/producto/:id` | Detalle de producto |
+| `/carrito` | Carrito |
+| `/login` | Iniciar sesión |
+| `/registro` | Registro |
+| `/pago` | Pago |
+| `/confirmacion` | Confirmación |
+| `/contacto` | Contacto |
+| `/quienes-somos` | Quiénes somos |
+| cualquier otra | Página no encontrada |
