@@ -12,6 +12,7 @@ import QuienesSomos from './pages/QuienesSomos'
 import NoEncontrada from './pages/NoEncontrada'
 import Navbar from './components/Navbar'
 import Footer from './components/Footer'
+import PanelAdmin from './pages/PanelAdmin'
 
 function App() {
     return (
@@ -19,6 +20,7 @@ function App() {
       <Navbar />
       <main>
         <Routes>
+          <Route path="/panel-admin" element={<PanelAdmin />} />
           <Route path="/" element={<Inicio />} />
           <Route path="/catalogo" element={<Catalogo />} />
           <Route path="/producto/:id" element={<DetalleProducto />} />

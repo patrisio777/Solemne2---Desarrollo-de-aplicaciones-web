@@ -1,0 +1,45 @@
+body:has(.panel-admin) { background: #eee7de; color-scheme: light; }
+body:has(.panel-admin) #root { border-color: #dfd4c7; }
+body:has(.panel-admin) nav { display: flex; flex-wrap: wrap; justify-content: center; gap: 12px 24px; padding: 20px 24px; background: #fbf8f3; border-bottom: 1px solid #dfd4c7; font: 14px/1.5 'Trebuchet MS', sans-serif; }
+body:has(.panel-admin) nav a { color: #75675c; text-decoration: none; padding: 4px 0; }
+body:has(.panel-admin) nav a:hover { color: #38271e; text-decoration: underline; text-underline-offset: 6px; }
+body:has(.panel-admin) nav a[href='/panel-admin'] { color: #65452f; font-weight: bold; border-bottom: 2px solid #b68b65; }
+body:has(.panel-admin) footer { padding: 20px; background: #fbf8f3; border-top: 1px solid #dfd4c7; color: #75675c; font: 13px/1.5 'Trebuchet MS', sans-serif; }
+.panel-admin { color-scheme: light; color: #40352e; background: #f7f3ed; padding: 48px 32px; text-align: left; font: 16px/1.5 'Trebuchet MS', sans-serif; min-height: 65vh; }
+.panel-admin * { box-sizing: border-box; }
+.panel-cabecera { display: flex; justify-content: space-between; align-items: center; gap: 24px; padding-bottom: 32px; border-bottom: 1px solid #dfd4c7; }
+.panel-etiqueta { color: #80634c; text-transform: uppercase; font-size: 12px; letter-spacing: 2px; font-weight: bold; }
+.panel-admin h1 { color: #38271e; font: 44px/1.15 Georgia, serif; letter-spacing: -1px; margin: 12px 0; }
+.panel-admin h2 { color: #38271e; font: 30px/1.2 Georgia, serif; margin: 10px 0; }
+.panel-sello { border: 1px solid #d6c6b5; padding: 8px 14px; border-radius: 24px; white-space: nowrap; font-size: 13px; }
+.panel-resumen { display: grid; grid-template-columns: repeat(3, 1fr); padding: 28px 0; }
+.panel-resumen > div { display: flex; flex-direction: column; padding-left: 24px; border-left: 3px solid #b68b65; }
+.panel-resumen span { font-size: 13px; color: #75675c; }
+.panel-resumen strong { font: 40px/1.3 Georgia, serif; color: #38271e; }
+.panel-filtros { display: grid; grid-template-columns: 1fr 240px; gap: 20px; }
+.panel-admin label { display: flex; flex-direction: column; gap: 6px; font-size: 14px; font-weight: bold; }
+.panel-admin input, .panel-admin select { background: #fff; color: #40352e; padding: 11px 12px; border: 1px solid #c8b6a5; border-radius: 6px; font: inherit; width: 100%; }
+.panel-admin button { cursor: pointer; font: inherit; border: 1px solid #d1c0af; border-radius: 6px; background: #fff; color: #65452f; padding: 8px 12px; white-space: nowrap; }
+.panel-admin button:hover:not(:disabled) { background: #f1e7dc; }
+.panel-admin button:disabled { color: #83776c; background: #f0ece6; cursor: not-allowed; }
+.panel-admin :focus-visible { outline: 3px solid #95633b; outline-offset: 3px; }
+.panel-nota { color: #75675c; font-size: 13px; margin: 14px 0; }
+.panel-mensaje { color: #5f6745; min-height: 24px; }
+.panel-tabla { overflow-x: auto; background: #fff; border: 1px solid #dfd4c7; border-radius: 8px; }
+.panel-admin table { border-collapse: collapse; width: 100%; font-size: 14px; }
+.panel-admin caption { text-align: left; padding: 16px 20px; color: #75675c; }
+.panel-admin th { background: #eee5da; font-weight: bold; text-align: left; }
+.panel-admin th, .panel-admin td { padding: 16px 20px; border-top: 1px solid #ece4da; }
+.panel-admin td small { display: block; color: #7b6e62; margin-top: 3px; }
+.panel-rol { display: inline-block; padding: 4px 9px; border-radius: 20px; background: #f3eee7; font-size: 12px; }
+.panel-rol.admin { background: #ebddcc; color: #6a452b; }
+.panel-vacio, .panel-aviso { padding: 32px; }
+.panel-aviso a { display: inline-block; color: #65452f; margin-top: 16px; }
+.panel-dialogo { color: #40352e; background: #fbf8f3; border: 1px solid #ccb9a5; border-radius: 12px; width: min(480px, calc(100% - 32px)); padding: 28px; max-height: 90vh; overflow-y: auto; }
+.panel-dialogo::backdrop { background: rgb(40 28 19 / 55%); }
+.panel-dialogo fieldset { border: 0; padding: 0; margin: 24px 0; display: grid; gap: 16px; }
+.panel-acciones { display: flex; justify-content: flex-end; gap: 12px; margin-top: 24px; }
+.panel-acciones button[type=submit] { background: #65452f; color: #fff; }
+.panel-acciones button[type=submit]:hover:not(:disabled) { background: #7d5537; }
+.panel-error { color: #9b2d28; font-size: 14px; }
+@media (max-width: 640px) { .panel-admin { padding: 28px 16px; } .panel-admin h1 { font-size: 34px; } .panel-cabecera { align-items: flex-start; flex-direction: column; gap: 12px; } .panel-filtros { grid-template-columns: 1fr; } .panel-resumen > div { padding-left: 12px; } .panel-resumen span { font-size: 12px; } .panel-admin th, .panel-admin td { padding: 12px; } }

@@ -27,6 +27,13 @@ DEBUG = True
 
 ALLOWED_HOSTS = []
 
+# Origenes locales de Vite para el login y las ediciones con sesion/CSRF.
+if DEBUG:
+    CSRF_TRUSTED_ORIGINS = [
+        'http://localhost:5173', 'http://127.0.0.1:5173',
+        'http://localhost:5174', 'http://127.0.0.1:5174',
+    ]
+
 
 # Application definition
 
