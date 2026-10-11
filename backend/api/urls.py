@@ -8,4 +8,6 @@ urlpatterns = [
     path('health/', views.db_status_endpoint, name='health_endpoint'),
     path('registro/', auth_views.registro, name='registro'),
     path('login/', auth_views.login, name='login'),
+    path('logout/', auth_views.logout, name='logout'),
+
 ]
