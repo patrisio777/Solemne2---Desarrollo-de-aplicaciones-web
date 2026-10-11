@@ -1,0 +1,16 @@
+# Entornos vituales
+venv/
+env/
+
+# Base de datos local de pruebas
+db.sqlite3
+*.sqlite3
+
+# Archivos compilados ocultos de python
+__pycache__/
+*.pyc
+*.pyo
+
+# Configuraciones de editores de código
+.vscode/
+.idea/
