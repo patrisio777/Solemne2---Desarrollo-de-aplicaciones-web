@@ -3,6 +3,9 @@ from django.conf import settings
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from config.mongodb import check_mongo_connection
+#importancion del modelo de usuario
+from django.contrib.auth.models import User
+from rest_framework import status
 
 @api_view(['GET'])
 def test_endpoint(request):
@@ -63,3 +66,65 @@ def db_status_endpoint(request):
             "para_activar_mongodb": "configurar MONGODB_URI en .env con tu string de conexion de mongodb atlas."
         }
     })
+@api_view(['GET'])
+def list_users(request):
+    """
+    Endpoint para listar todos los usuarios del sistema.
+    """
+    users = User.objects.all()
+    users_data = []
+    
+    for user in users:
+        users_data.append({
+            "id": user.id,
+            "username": user.username,
+            "email": user.email,
+            "is_active": user.is_active,
+            "first_name": user.first_name,
+            "last_name": user.last_name
+        })
+        
+    return Response({
+        "status": "success",
+        "message": "Usuarios obtenidos correctamente",
+        "data": users_data
+    })
+
+@api_view(['PATCH'])
+def update_user(request, user_id):
+    """
+    Endpoint para actualizar datos de un usuario o cambiar su estado (activo/inactivo).
+    """
+    try:
+        user = User.objects.get(id=user_id)
+    except User.DoesNotExist:
+        return Response(
+            {
+                "status": "error", 
+                "message": "Usuario no encontrado"
+            }, 
+            status=status.HTTP_404_NOT_FOUND
+        )
+    
+    # Obtenemos los datos que envía el Frontend en el JSON
+    data = request.data
+    
+    # Actualizamos solo los campos que vengan en la petición
+    if 'username' in data:
+        user.username = data['username']
+    if 'email' in data:
+        user.email = data['email']
+    if 'first_name' in data:
+        user.first_name = data['first_name']
+    if 'last_name' in data:
+        user.last_name = data['last_name']
+    if 'is_active' in data:
+        user.is_active = data['is_active']
+        
+    user.save() # Guardamos los cambios en la base de datos
+    
+    return Response({
+        "status": "success",
+        "message": f"Usuario con ID {user_id} actualizado correctamente"
+    })
+
