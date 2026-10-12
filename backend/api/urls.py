@@ -11,4 +11,6 @@ urlpatterns = [
     #nuevas rutas
     path('users/', views.list_users, name='list_users'),
     path('users/<int:user_id>/', views.update_user, name='update_user'),
+    path('logout/', auth_views.logout, name='logout'),
+
 ]
