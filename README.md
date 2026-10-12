@@ -11,7 +11,7 @@
 |---|---|---|---|
 | **Patricio Chaug** | **Scrum Master (SM)** & Desarrollador Frontend | Gestión Ágil & Frontend | Coordinación de ceremonias ágiles, organización de sprints, tablero de tareas, desarrollo de componentes e interfaz en React + Vite. |
 | **Javiera Fuentealba** | Desarrolladora Backend | Backend & Bases de Datos | Configuración del entorno Django, endpoints de autenticación por Token, conexión y modelos en PostgreSQL y MongoDB Atlas. |
-| **Brandon Valdez** | Desarrollador Backend | Backend & API REST | Desarrollo de endpoints RESTful, validación de datos, control de lógica de negocio y gestión de usuarios. |
+| **Brandon Valdés** | Desarrollador Backend | Backend & API REST | Desarrollo de endpoints RESTful, validación de datos, control de lógica de negocio y gestión de usuarios. |
 | **Gabriel Moreno** | Desarrollador Backend | Backend & Seguridad | Implementación de validaciones de seguridad, endpoints de salud/diagnóstico de BD, manejo de estados y sesiones. |
 | **Cristóbal Garrido** | Diseñador UI/UX & Desarrollador Frontend | Diseño & Frontend | Identidad corporativa, wireframes y bocetos navegables (Sprint 1), diseño de paletas temáticas y maquetación de vistas en React. |
 | **José Argüello** | Desarrollador Frontend | Frontend & Integración | Implementación de vistas navegables, enrutamiento con React Router DOM, integración de componentes y consumo de la API. |
