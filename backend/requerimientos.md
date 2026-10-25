@@ -1,2 +1,0 @@
-Django==6.1.1
-djangorestframework==3.18.1
