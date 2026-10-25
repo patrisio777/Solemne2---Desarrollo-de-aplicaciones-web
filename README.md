@@ -1,16 +1,16 @@
-# ☕ Paraíso del Café — Solemne 2: Desarrollo de Aplicaciones Web
+# Paraíso del Café — Solemne 2: Desarrollo de Aplicaciones Web
 
 > **«Un sorbo al paraíso»**  
 > Plataforma web integral de comercio electrónico y gestión para cafetería de especialidad, desarrollada con una arquitectura desacoplada y persistencia políglota (PostgreSQL + MongoDB Atlas).
 
 ---
 
-## 👥 1. Equipo, Scrum Master y Responsabilidades
+## 1. Equipo, Scrum Master y Responsabilidades
 
 | Integrante | Rol / Responsabilidad | Área Principal | Tareas Asignadas |
 |---|---|---|---|
 | **Patricio Chaug** | **Scrum Master (SM)** & Desarrollador Frontend | Gestión Ágil & Frontend | Coordinación de ceremonias ágiles, organización de sprints, tablero de tareas, desarrollo de componentes e interfaz en React + Vite. |
-| **Javiera Fuentealba** | Desarrolladora Backend | Backend & Bases de Datos | Configuración del entorno Django, endpoints de autenticación por Token, conexión y modelos en PostgreSQL y MongoDB Atlas. |
+| **Javiera Fuentealba** | Desarrolladora Backend | Backend & Bases de Datos | Configuración del entorno Django, endpoints de autenticación por Token, conexión y modelos en PostgreSQL y MongoDB Atlas, e investigación de pasarela de pago en modo Sandbox. |
 | **Brandon Valdés** | Desarrollador Backend | Backend & API REST | Desarrollo de endpoints RESTful, validación de datos, control de lógica de negocio y gestión de usuarios. |
 | **Gabriel Moreno** | Desarrollador Backend | Backend & Seguridad | Implementación de validaciones de seguridad, endpoints de salud/diagnóstico de BD, manejo de estados y sesiones. |
 | **Cristóbal Garrido** | Diseñador UI/UX & Desarrollador Frontend | Diseño & Frontend | Identidad corporativa, wireframes y bocetos navegables (Sprint 1), diseño de paletas temáticas y maquetación de vistas en React. |
@@ -18,7 +18,7 @@
 
 ---
 
-## 🎯 2. Contexto, Alcance y Mejoras Opcionales
+## 2. Contexto, Alcance y Mejoras Opcionales
 
 ### 2.1 Contexto del Negocio
 **Paraíso del Café** es una tienda de café de especialidad y salón artesanal que busca digitalizar la experiencia de compra de sus clientes. La solución aborda tanto la visualización interactiva del catálogo y formatos de molienda como la gestión de pedidos, registro seguro de clientes y auditoría de transacciones.
@@ -36,8 +36,10 @@
   * Autenticación segura mediante Tokens (`/api/registro/`, `/api/login/`, `/api/logout/`) con soporte de suspensión de cuentas (`is_active`).
   * Gestión de usuarios (`/api/users/`, `/api/users/<id>/`).
   * Interfaz Frontend moderna con **React 19** y **Vite**.
+  * **Investigación Técnica de Pasarela de Pagos Sandbox** ([backend/docs/2_investigacion_pasarela_pago_sandbox.md](backend/docs/2_investigacion_pasarela_pago_sandbox.md)).
 
 ### 2.3 Mejoras Opcionales (Roadmap Futuro)
+- [x] **Investigación de pasarela de pago en modo Sandbox:** Análisis de Transbank Webpay Plus, Mercado Pago y Stripe con guía de integración Django + DRF ([Documento Técnico](backend/docs/2_investigacion_pasarela_pago_sandbox.md)).
 - [ ] Integración con pasarela de pago real (Webpay Plus / Stripe) mediante webhooks con verificación criptográfica e idempotencia.
 - [ ] Sistema de reservas de mesas y programación de retiro en tienda física.
 - [ ] Envío automático de boletas electrónicas y confirmación de pedidos vía correo (SMTP transaccional).
@@ -46,7 +48,7 @@
 
 ---
 
-## 🏛️ 3. Arquitectura, Diagramas, Servicios y Datos
+## 3. Arquitectura, Diagramas, Servicios y Datos
 
 El sistema implementa una **arquitectura desacoplada (Decoupled Client-Server)** basada en servicios REST y persistencia políglota:
 
@@ -78,18 +80,22 @@ graph TD
 ```
 
 ### 3.1 Modelo de Datos y Distribución
-* **Base de Datos Relacional (PostgreSQL):**
-  * `auth_user`: Credenciales, nombres, correo único, estado activo/suspendido (`is_active`), rol administrador (`is_staff`).
-  * `authtoken_token`: Tokens de sesión para autorización de solicitudes.
-  * Transacciones financieras y control estricto de inventario.
+* **Base de Datos Relacional (PostgreSQL / SQLite Fallback):**
+  * `auth_user`: Credenciales, correo único, estado activo/suspendido (`is_active`), roles y permisos (`is_staff`).
+  * `authtoken_token`: Tokens de sesión para autenticación en la API REST de Django.
+  * `Categoria` (`api_categoria`): Clasificación del catálogo (Grano, Molido, Repostería, Accesorios).
+  * `Producto` (`api_producto`): Catálogo comercial con precio en CLP, unidades en inventario (`stock`) y formato.
+  * `Pedido` (`api_pedido`) y `DetallePedido` (`api_detallepedido`): Gestión transaccional de compras con aislamiento ACID e integridad referencial protegida (`PROTECT`).
+  * `PagoTransaccion` (`api_pagotransaccion`): Registro formal de transacciones bancarias, montos y códigos de aprobación.
 * **Base de Datos No Relacional (MongoDB Atlas):**
-  * Colección `contactos`: Mensajes y consultas recibidas desde el formulario web.
-  * Colección `audit_logs`: Trazas y cargas útiles (payloads) de transacciones externas.
-  * Colección `granos_detalles`: Metadatos dinámicos del café (notas de cata, altitud, proceso, curvas de tueste).
+  * Colección `mensajes_contacto`: Consultas y mensajes recibidos desde el formulario de contacto web.
+  * Colección `logs_pasarela_pagos`: Payloads JSON en bruto y trazas forenses de pasarelas de pago (Transbank Webpay / Stripe).
+  * Colección `fichas_tecnicas_cafe`: Metadatos botánicos y sensoriales variables (notas de cata, altitud m.s.n.m., proceso, curvas de tueste).
+  * Colección `resenas_productos`: Opiniones, valoraciones de 1 a 5 estrellas y feedback flexible de clientes.
 
 ---
 
-## 📦 4. Versiones, Compatibilidad, Prerrequisitos y Cuentas
+## 4. Versiones, Compatibilidad, Prerrequisitos y Cuentas
 
 ### 4.1 Tecnologías y Versiones Obligatorias
 * **Python:** `v3.10` a `v3.12+`
@@ -108,21 +114,22 @@ graph TD
 
 ---
 
-## 🚀 5. Instalación desde Clon Limpio y Comandos por Servicio
+## 5. Instalación desde Clon Limpio y Comandos por Servicio
 
-### 5.1 Clonar el Repositorio
+### 5.1 Clonar el Repositorio (Backend)
 ```bash
-git clone https://github.com/patrisio777/Solemne2---Desarrollo-de-aplicaciones-web.git
-cd Solemne2---Desarrollo-de-aplicaciones-web
+git clone https://github.com/ReneGG/dwebs03BackendCafein-manos.git
+cd dwebs03BackendCafein-manos
 ```
 
 ---
 
 ### 5.2 Configuración del Backend (Django REST Framework)
 
-1. **Ingresar al directorio `backend`:**
+1. **Ingresar al directorio del backend:**
    ```powershell
-   cd backend
+   cd dwebs03BackendCafein-manos
+   # (Si el proyecto se ejecuta desde una subcarpeta backend, ejecutar: cd backend)
    ```
 
 2. **Crear y activar entorno virtual:**
@@ -147,7 +154,7 @@ cd Solemne2---Desarrollo-de-aplicaciones-web
    Copy-Item .env.example .env
    # En Linux/macOS: cp .env.example .env
    ```
-   *(Edita el archivo `.env` según tus credenciales de PostgreSQL y MongoDB Atlas; ver [Sección 6](#-6-variables-de-entorno-sin-valores-secretos)).*
+   *(Edita el archivo `.env` según tus credenciales de PostgreSQL y MongoDB Atlas; ver [Sección 6](#6-variables-de-entorno-sin-valores-secretos)).*
 
 5. **Ejecutar migraciones de la base de datos:**
    ```powershell
@@ -202,9 +209,9 @@ python -m http.server 5175 --bind 127.0.0.1
 
 ---
 
-## 🔐 6. Variables de Entorno (Sin Valores Secretos)
+## 6. Variables de Entorno (Sin Valores Secretos)
 
-El archivo `.env` reside en la raíz de la carpeta `backend/` y **NUNCA** debe ser commiteado al repositorio. Utilice la siguiente plantilla (`backend/.env.example`):
+El archivo `.env` reside en la raíz del proyecto backend (`dwebs03BackendCafein-manos/` o subcarpeta `backend/`) y **NUNCA** debe ser commiteado al repositorio. Utilice la siguiente plantilla (`.env.example`):
 
 ```env
 # ==============================================================================
@@ -243,10 +250,10 @@ CORS_ALLOWED_ORIGINS=http://localhost:5173,http://127.0.0.1:5173,http://localhos
 
 ---
 
-## 👤 7. Datos Iniciales y Primer Administrador Seguro
+## 7. Datos Iniciales y Primer Administrador Seguro
 
 ### 7.1 Crear el Superusuario de Django
-Para acceder al panel administrativo y gestionar usuarios o datos, ejecute de forma interactiva en la carpeta `backend/`:
+Para acceder al panel administrativo y gestionar usuarios o datos, ejecute de forma interactiva en la carpeta del backend (`dwebs03BackendCafein-manos`):
 
 ```powershell
 python manage.py createsuperuser
@@ -276,7 +283,7 @@ Los usuarios estándar pueden registrarse mediante el endpoint seguro de la API:
 
 ---
 
-## 🧪 8. Pruebas, Reportes, Estados, Reservas e Idempotencia
+## 8. Pruebas, Reportes, Estados, Reservas e Idempotencia
 
 ### 8.1 Ejecución de Pruebas Automatizadas
 * **Backend:**
@@ -331,7 +338,7 @@ Permite comprobar el estado de ambas bases de datos sin requerir inicio de sesi�
 
 ---
 
-## 🌐 9. URLs, Plataformas, Cuotas y Persistencia
+## 9. URLs, Plataformas, Cuotas y Persistencia
 
 ### 9.1 Tabla de URLs del Proyecto
 | Servicio / Módulo | URL Local | Descripción |
@@ -356,7 +363,7 @@ Permite comprobar el estado de ambas bases de datos sin requerir inicio de sesi�
 
 ---
 
-## 🛡️ 10. Logs, Reintentos, Respaldos y Recuperación
+## 10. Logs, Reintentos, Respaldos y Recuperación
 
 ### 10.1 Gestión de Logs y Diagnóstico
 * Los errores de conexión de la base de datos se registran en la consola del servidor backend detallando la excepción.
@@ -388,7 +395,7 @@ mongorestore --uri="<TU_MONGODB_URI>" ./backup_mongo/
 
 ---
 
-## 📈 11. Trazabilidad, Contribuciones y Limitaciones Conocidas
+## 11. Trazabilidad, Contribuciones y Limitaciones Conocidas
 
 ### 11.1 Flujo de Trabajo Git (Git Flow)
 * `main`: Código estable probado y listo para entrega.
@@ -407,7 +414,7 @@ mongorestore --uri="<TU_MONGODB_URI>" ./backup_mongo/
 
 ---
 
-## 📜 12. Procedencia y Licencias de Recursos
+## 12. Procedencia y Licencias de Recursos
 
 * **Recursos Gráficos y Multimedia:**
   * Logotipo e Isotipo (`logotipo.svg`, `simbolo.svg`): Creación original del equipo de diseño del proyecto bajo autoría de Cristóbal Garrido.
@@ -420,7 +427,3 @@ mongorestore --uri="<TU_MONGODB_URI>" ./backup_mongo/
   * **PyMongo & Psycopg2:** Licencia Apache 2.0 / LGPL con excepciones.
 * **Licencia del Repositorio:**
   * Proyecto académico bajo **Licencia MIT**. Consulte el repositorio para más detalles.
-
----
-
-> © 2026 **Paraíso del Café** · Proyecto de Aplicación Web.
