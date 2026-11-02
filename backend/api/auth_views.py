@@ -20,6 +20,7 @@ def registro(request):
     #Normalizar email para evitar mayusculas y espacios
     email = email_crudo.strip().lower() if email_crudo else ''
 
+    #Validar campos obligatorios
     if not email or not password:
         return Response(
             {'error': 'Faltan datos obligatorios (correo y contraseña).'},
@@ -57,7 +58,9 @@ def registro(request):
         email=email, 
         password=password,
         first_name=nombre,
-        last_name=apellido
+        last_name=apellido,
+        is_staff=False,
+        is_superuser=False
         )
 
     #Generamos el token para el usuario recién creado
@@ -95,25 +98,24 @@ def login(request):
         #Damos un error por si el usuario no existe
         return Response ({'error': 'Datos incorrectos.'}, status=status.HTTP_401_UNAUTHORIZED)
 
-    #Validar si la cuenta está suspendido
+    #Validar credenciales
+    if not user_obj.check_password(password):
+        return Response({'error': 'Datos incorrectos.'}, status=status.HTTP_401_UNAUTHORIZED)
+
+    #Validar si la cuenta está suspendida
     if not user_obj.is_active:
         return Response({'error': 'Esta cuenta se encuentra suspendida.'}, status=status.HTTP_403_FORBIDDEN)
 
-    #Validar que si existe y no está suspendido, la clave sea correcta
-    user = authenticate(username=email, password=password)
-    if user is None:
-        return Response({'error': 'Datos incorrectos.'}, status=status.HTTP_401_UNAUTHORIZED)
-
     
     #Si todo es correcto, recuperamos su token de acceso
-    token, created = Token.objects.get_or_create(user=user)
+    token, created = Token.objects.get_or_create(user=user_obj)
     return Response({
         'token': token.key,
         'usuario': {
-            'nombre': user.first_name,
-            'apellido': user.last_name,
-            'email': user.email,
-            'es_admin': user.is_staff
+            'nombre': user_obj.first_name,
+            'apellido': user_obj.last_name,
+            'email': user_obj.email,
+            'es_admin': user_obj.is_staff
         }
     }, status=status.HTTP_200_OK)
 

@@ -1,8 +1,10 @@
 from django.db import connection
 from django.conf import settings
-from rest_framework.decorators import api_view
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from config.mongodb import check_mongo_connection
+from .permissions import EsAdministrador, EsCliente
 
 @api_view(['GET'])
 def test_endpoint(request):
@@ -62,4 +64,24 @@ def db_status_endpoint(request):
             "para_activar_psql": "configurar USE_POSTGRESQL=True en .env con las credenciales de tu servidor postgresql.",
             "para_activar_mongodb": "configurar MONGODB_URI en .env con tu string de conexion de mongodb atlas."
         }
+    })
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated, EsCliente])
+def perfil_cliente(request):
+    #Endpoint protegido para clientes: muestra info de su perfil.
+    return Response({
+        "mensaje": f"Bienvenido a tu perfil, {request.user.first_name}.",
+        "email": request.user.email,
+        "rol": "Cliente"
+    })
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated, EsAdministrador])
+def panel_administrador(request):
+    #Endpoint protegido para administradores: Muestra la gestion de la cafetería.
+    return Response({
+        "mensaje": "Bienvenido al panel de control de la cafetería.",
+        "admin": request.user.email,
+        "rol": "Administrador"
     })
