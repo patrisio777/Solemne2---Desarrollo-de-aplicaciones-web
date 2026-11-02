@@ -7,6 +7,8 @@ from rest_framework import status
 from django.contrib.auth.models import User
 from config.mongodb import check_mongo_connection
 from .permissions import EsAdministrador, EsCliente
+from django.core.validators import validate_email
+from django.core.exceptions import ValidationError
 
 
 @api_view(['GET'])
@@ -66,13 +68,12 @@ def db_status_endpoint(request):
         }
     })
 
-#ENDPOINT DE GESTION DE USUARIOS
+# ENDPOINT DE GESTION DE USUARIOS
 @api_view(['GET'])
+@permission_classes([IsAuthenticated, EsAdministrador])
 def list_users(request):
-    
-    """Endpoint para listar todos los usuarios del sistema."""
-    
-    users = User.objects.all()
+    """Endpoint para listar todos los usuarios del sistema (solo administradores)."""
+    users = User.objects.all().order_by('id')
     users_data = []
     
     for user in users:
@@ -82,20 +83,21 @@ def list_users(request):
             "email": user.email,
             "is_active": user.is_active,
             "first_name": user.first_name,
-            "last_name": user.last_name
+            "last_name": user.last_name,
+            "es_admin": user.is_staff
         })
         
     return Response({
         "status": "success",
-        "message": "Usuarios obtenidos correctamente",
+        "total": len(users_data),
         "data": users_data
-    })
+    }, status=status.HTTP_200_OK)
+
 
 @api_view(['PATCH'])
+@permission_classes([IsAuthenticated, EsAdministrador])
 def update_user(request, user_id):
-    
-    """Endpoint para actualizar datos de un usuario o cambiar su estado (activo/inactivo)."""
-    
+    """Endpoint para actualizar datos de un usuario o cambiar su estado a bloqueado (is_active=False)."""
     try:
         user = User.objects.get(id=user_id)
     except User.DoesNotExist:
@@ -107,27 +109,76 @@ def update_user(request, user_id):
             status=status.HTTP_404_NOT_FOUND
         )
     
-    # Obtenemos los datos que envía el Frontend en el JSON
     data = request.data
-    
-    # Actualizamos solo los campos que vengan en la petición
-    if 'username' in data:
-        user.username = data['username']
+
+    # 1. Validación de seguridad: Prevenir que el admin se bloquee a sí mismo o a un superusuario
+    if 'is_active' in data and data['is_active'] is False:
+        if request.user.id == user.id:
+            return Response(
+                {
+                    "status": "error",
+                    "message": "No puedes suspender tu propia cuenta de administrador."
+                },
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        if user.is_superuser:
+            return Response(
+                {
+                    "status": "error",
+                    "message": "No se puede suspender a un superusuario del sistema."
+                },
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+    # 2. Validación de correo único y formato si se solicita cambiar el email
     if 'email' in data:
-        user.email = data['email']
+        nuevo_email = str(data['email']).strip().lower()
+        try:
+            validate_email(nuevo_email)
+        except ValidationError:
+            return Response(
+                {
+                    "status": "error",
+                    "message": "El formato del correo electrónico no es válido."
+                },
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        # Validar que no pertenezca a otra persona
+        if User.objects.filter(username=nuevo_email).exclude(id=user.id).exists():
+            return Response(
+                {
+                    "status": "error",
+                    "message": "El correo ya está registrado por otro usuario."
+                },
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        user.email = nuevo_email
+        user.username = nuevo_email
+
+    # 3. Actualizar campos de texto o estado si vienen en la petición
     if 'first_name' in data:
         user.first_name = data['first_name']
     if 'last_name' in data:
         user.last_name = data['last_name']
     if 'is_active' in data:
-        user.is_active = data['is_active']
+        user.is_active = bool(data['is_active'])
         
-    user.save() # Guardamos los cambios en la base de datos
+    user.save()
     
     return Response({
         "status": "success",
-        "message": f"Usuario con ID {user_id} actualizado correctamente"
-    })
+        "message": f"Usuario con ID {user_id} actualizado correctamente",
+        "usuario": {
+            "id": user.id,
+            "username": user.username,
+            "email": user.email,
+            "first_name": user.first_name,
+            "last_name": user.last_name,
+            "is_active": user.is_active,
+            "es_admin": user.is_staff
+        }
+    }, status=status.HTTP_200_OK)
 
 #ENDPOIN DE AUTORIZACION POR ROLES
 @api_view(['GET'])
