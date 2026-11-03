@@ -201,6 +201,7 @@ def update_user(request, user_id):
         data = request.data
 
         # A. Validación de seguridad al bloquear cuentas (is_active = False)
+        is_active_val = None
         if 'is_active' in data:
             is_active_raw = data['is_active']
             if isinstance(is_active_raw, str):
@@ -270,8 +271,8 @@ def update_user(request, user_id):
             user.first_name = data['first_name']
         if 'last_name' in data:
             user.last_name = data['last_name']
-        if 'is_active' in data:
-            user.is_active = bool(data['is_active'])
+        if is_active_val is not None:
+            user.is_active = is_active_val
             
         user.save()
         
