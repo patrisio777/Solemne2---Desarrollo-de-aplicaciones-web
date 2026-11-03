@@ -165,10 +165,10 @@ def list_users(request):
         }, status=status.HTTP_201_CREATED)
 
 
-@api_view(['PATCH'])
+@api_view(['GET', 'PATCH'])
 @permission_classes([IsAuthenticated, EsAdministrador])
 def update_user(request, user_id):
-    """Endpoint para actualizar datos de un usuario o cambiar su estado a bloqueado (is_active=False)."""
+    """Endpoint para consultar un usuario individualmente (GET) o modificar sus datos/bloquearlo (PATCH). Solo administradores."""
     try:
         user = User.objects.get(id=user_id)
     except User.DoesNotExist:
@@ -179,77 +179,115 @@ def update_user(request, user_id):
             }, 
             status=status.HTTP_404_NOT_FOUND
         )
-    
-    data = request.data
 
-    # 1. Validación de seguridad: Prevenir que el admin se bloquee a sí mismo o a un superusuario
-    if 'is_active' in data and data['is_active'] is False:
-        if request.user.id == user.id:
-            return Response(
-                {
-                    "status": "error",
-                    "message": "No puedes suspender tu propia cuenta de administrador."
-                },
-                status=status.HTTP_400_BAD_REQUEST
-            )
-        if user.is_superuser:
-            return Response(
-                {
-                    "status": "error",
-                    "message": "No se puede suspender a un superusuario del sistema."
-                },
-                status=status.HTTP_400_BAD_REQUEST
-            )
+    # 1. CONSULTA INDIVIDUAL DE USUARIO (GET)
+    if request.method == 'GET':
+        return Response({
+            "status": "success",
+            "usuario": {
+                "id": user.id,
+                "username": user.username,
+                "email": user.email,
+                "first_name": user.first_name,
+                "last_name": user.last_name,
+                "is_active": user.is_active,
+                "es_admin": user.is_staff,
+                "fecha_registro": user.date_joined.strftime("%Y-%m-%d %H:%M") if user.date_joined else None
+            }
+        }, status=status.HTTP_200_OK)
 
-    # 2. Validación de correo único y formato si se solicita cambiar el email
-    if 'email' in data:
-        nuevo_email = str(data['email']).strip().lower()
-        try:
-            validate_email(nuevo_email)
-        except ValidationError:
-            return Response(
-                {
-                    "status": "error",
-                    "message": "El formato del correo electrónico no es válido."
-                },
-                status=status.HTTP_400_BAD_REQUEST
-            )
+    # 2. MODIFICACIÓN Y BLOQUEO DE USUARIO (PATCH)
+    elif request.method == 'PATCH':
+        data = request.data
+
+        # A. Validación de seguridad al bloquear cuentas (is_active = False)
+        if 'is_active' in data:
+            is_active_raw = data['is_active']
+            if isinstance(is_active_raw, str):
+                is_active_val = is_active_raw.strip().lower() in ('true', '1', 't')
+            else:
+                is_active_val = bool(is_active_raw)
+
+            if is_active_val is False:
+                # Regla 1: Prevenir auto-bloqueo del administrador en sesión
+                if request.user.id == user.id:
+                    return Response(
+                        {
+                            "status": "error",
+                            "message": "No puedes suspender tu propia cuenta de administrador."
+                        },
+                        status=status.HTTP_400_BAD_REQUEST
+                    )
+                # Regla 2: Prevenir bloqueo de superusuario
+                if user.is_superuser:
+                    return Response(
+                        {
+                            "status": "error",
+                            "message": "No se puede suspender a un superusuario del sistema."
+                        },
+                        status=status.HTTP_400_BAD_REQUEST
+                    )
+                # Regla 3: Prevenir bloqueo del último administrador activo
+                if user.is_staff:
+                    admins_activos = User.objects.filter(is_staff=True, is_active=True).count()
+                    if admins_activos <= 1:
+                        return Response(
+                            {
+                                "status": "error",
+                                "message": "No se puede suspender al último administrador activo del sistema."
+                            },
+                            status=status.HTTP_400_BAD_REQUEST
+                        )
+
+        # B. Validación de correo único y formato si se solicita cambiar el email
+        if 'email' in data:
+            nuevo_email = str(data['email']).strip().lower()
+            try:
+                validate_email(nuevo_email)
+            except ValidationError:
+                return Response(
+                    {
+                        "status": "error",
+                        "message": "El formato del correo electrónico no es válido."
+                    },
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+            
+            # Validar que no pertenezca a otra persona
+            if User.objects.filter(username=nuevo_email).exclude(id=user.id).exists():
+                return Response(
+                    {
+                        "status": "error",
+                        "message": "El correo ya está registrado por otro usuario."
+                    },
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+            user.email = nuevo_email
+            user.username = nuevo_email
+
+        # C. Actualizar campos de texto o estado si vienen en la petición
+        if 'first_name' in data:
+            user.first_name = data['first_name']
+        if 'last_name' in data:
+            user.last_name = data['last_name']
+        if 'is_active' in data:
+            user.is_active = bool(data['is_active'])
+            
+        user.save()
         
-        # Validar que no pertenezca a otra persona
-        if User.objects.filter(username=nuevo_email).exclude(id=user.id).exists():
-            return Response(
-                {
-                    "status": "error",
-                    "message": "El correo ya está registrado por otro usuario."
-                },
-                status=status.HTTP_400_BAD_REQUEST
-            )
-        user.email = nuevo_email
-        user.username = nuevo_email
-
-    # 3. Actualizar campos de texto o estado si vienen en la petición
-    if 'first_name' in data:
-        user.first_name = data['first_name']
-    if 'last_name' in data:
-        user.last_name = data['last_name']
-    if 'is_active' in data:
-        user.is_active = bool(data['is_active'])
-        
-    user.save()
-    
-    return Response({
-        "status": "success",
-        "message": f"Usuario con ID {user_id} actualizado correctamente",
-        "usuario": {
-            "id": user.id,
-            "username": user.username,
-            "email": user.email,
-            "first_name": user.first_name,
-            "last_name": user.last_name,
-            "is_active": user.is_active,
-            "es_admin": user.is_staff
-        }
-    }, status=status.HTTP_200_OK)
+        return Response({
+            "status": "success",
+            "message": f"Usuario con ID {user_id} actualizado correctamente",
+            "usuario": {
+                "id": user.id,
+                "username": user.username,
+                "email": user.email,
+                "first_name": user.first_name,
+                "last_name": user.last_name,
+                "is_active": user.is_active,
+                "es_admin": user.is_staff
+            }
+        }, status=status.HTTP_200_OK)
 
 #ENDPOIN DE AUTORIZACION POR ROLES
 @api_view(['GET'])
