@@ -9,6 +9,7 @@ from config.mongodb import check_mongo_connection
 from .permissions import EsAdministrador, EsCliente
 from django.core.validators import validate_email
 from django.core.exceptions import ValidationError
+from django.contrib.auth.password_validation import validate_password
 
 
 @api_view(['GET'])
@@ -68,30 +69,100 @@ def db_status_endpoint(request):
         }
     })
 
-# ENDPOINT DE GESTION DE USUARIOS
-@api_view(['GET'])
+# ENDPOINT DE GESTION DE USUARIOS (LISTAR Y CREAR)
+@api_view(['GET', 'POST'])
 @permission_classes([IsAuthenticated, EsAdministrador])
 def list_users(request):
-    """Endpoint para listar todos los usuarios del sistema (solo administradores)."""
-    users = User.objects.all().order_by('id')
-    users_data = []
-    
-    for user in users:
-        users_data.append({
-            "id": user.id,
-            "username": user.username,
-            "email": user.email,
-            "is_active": user.is_active,
-            "first_name": user.first_name,
-            "last_name": user.last_name,
-            "es_admin": user.is_staff
-        })
+    """Endpoint para listar usuarios (GET) o crear un usuario individualmente (POST). Solo administradores."""
+    # 1. LISTAR USUARIOS (GET)
+    if request.method == 'GET':
+        users = User.objects.all().order_by('id')
+        users_data = []
         
-    return Response({
-        "status": "success",
-        "total": len(users_data),
-        "data": users_data
-    }, status=status.HTTP_200_OK)
+        for user in users:
+            users_data.append({
+                "id": user.id,
+                "username": user.username,
+                "email": user.email,
+                "is_active": user.is_active,
+                "first_name": user.first_name,
+                "last_name": user.last_name,
+                "es_admin": user.is_staff
+            })
+            
+        return Response({
+            "status": "success",
+            "total": len(users_data),
+            "data": users_data
+        }, status=status.HTTP_200_OK)
+
+    # 2. CREACIÓN INDIVIDUAL DE USUARIOS (POST)
+    elif request.method == 'POST':
+        data = request.data
+        email_crudo = data.get('email')
+        password = data.get('password')
+        first_name = data.get('first_name', data.get('nombre', ''))
+        last_name = data.get('last_name', data.get('apellido', ''))
+        es_admin = bool(data.get('es_admin', data.get('is_staff', False)))
+
+        email = email_crudo.strip().lower() if email_crudo else ''
+
+        # A. Validar campos obligatorios
+        if not email or not password:
+            return Response(
+                {"status": "error", "message": "Faltan datos obligatorios (correo y contraseña)."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        # B. Validar formato de email
+        try:
+            validate_email(email)
+        except ValidationError:
+            return Response(
+                {"status": "error", "message": "El correo electrónico no tiene un formato válido."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        # C. Evitar registros duplicados
+        if User.objects.filter(username=email).exists():
+            return Response(
+                {"status": "error", "message": "Este correo ya se encuentra registrado."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        # D. Validar robustez de la contraseña
+        try:
+            validate_password(password)
+        except ValidationError as e:
+            return Response(
+                {"status": "error", "message": e.messages},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        # E. Crear el usuario en la base de datos
+        user = User.objects.create_user(
+            username=email,
+            email=email,
+            password=password,
+            first_name=first_name,
+            last_name=last_name,
+            is_staff=es_admin,
+            is_active=True
+        )
+
+        return Response({
+            "status": "success",
+            "message": "Usuario creado exitosamente.",
+            "usuario": {
+                "id": user.id,
+                "username": user.username,
+                "email": user.email,
+                "first_name": user.first_name,
+                "last_name": user.last_name,
+                "is_active": user.is_active,
+                "es_admin": user.is_staff
+            }
+        }, status=status.HTTP_201_CREATED)
 
 
 @api_view(['PATCH'])
