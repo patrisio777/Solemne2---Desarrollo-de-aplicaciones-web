@@ -1,0 +1,52 @@
+/* Paletas y tipografías compartidas con los bocetos del sprint 1 (wireframe.css). */
+.admin-panel.store {
+  width: calc(100% - 40px);
+  max-width: 1060px;
+  margin: 32px auto;
+  padding: 28px;
+  min-height: 70vh;
+  text-align: left;
+  border: 1px solid var(--line) !important;
+}
+.admin-temas { display: flex; align-items: center; justify-content: flex-end; gap: 10px; margin-bottom: 24px; font-size: 12px; color: var(--muted); }
+.admin-panel.store select { border-color: var(--line) !important; padding: 6px 12px; }
+.admin-cabecera { padding-bottom: 24px; border-bottom: 1px solid var(--line) !important; }
+/* La portada impone fuentes y colores globales con !important. */
+.admin-panel.store h1, .admin-panel.store h2 { font-family: Georgia, 'Times New Roman', serif !important; font-weight: 400 !important; color: var(--ink) !important; letter-spacing: normal !important; }
+.admin-panel.store h1 { font-size: clamp(30px, 4vw, 44px); margin: 0 0 12px; }
+.admin-panel.store h2 { font-size: 26px; }
+.admin-panel.store p { color: var(--muted) !important; }
+.admin-panel.store .admin-etiqueta { font-size: 11px; font-weight: bold; letter-spacing: 2px; text-transform: uppercase; color: var(--muted) !important; margin: 0 0 12px; }
+.admin-cabecera > p:last-child { max-width: 560px; }
+.admin-demo { padding: 14px 18px; margin: 24px 0 20px; background: var(--soft); color: var(--ink); border: 1px solid var(--line) !important; font-size: 12px; }
+.admin-lista { padding: 20px; background: var(--surface); border: 1px solid var(--line) !important; }
+.admin-lista-titulo { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; justify-content: space-between; margin-bottom: 18px; }
+.admin-lista-titulo span { color: var(--muted); font-size: 12px; }
+.admin-panel .table-responsive { border: 1px solid var(--line) !important; }
+.admin-panel .table { --bs-table-bg: var(--surface); --bs-table-color: var(--ink); --bs-table-border-color: var(--line); font-size: 13px; white-space: nowrap; }
+.admin-panel .table > :not(caption) > * > * { padding: 14px 12px; border-bottom: 1px solid var(--line) !important; }
+.admin-panel thead th { background: var(--soft); color: var(--ink); font-size: 11px; text-transform: uppercase; letter-spacing: 1px; }
+.admin-propia { display: block; margin-top: 4px; color: var(--muted); font-size: 11px; font-weight: normal; }
+.admin-estado { display: inline-block; padding: 3px 8px; border: 1px solid var(--line) !important; border-radius: 4px; font-size: 11px; }
+.admin-estado.activo { background: var(--soft); color: var(--ink); }
+.admin-estado.suspendido { border-style: dashed !important; color: var(--muted); }
+.admin-acciones { display: flex; gap: 6px; }
+.admin-panel.store .admin-nota { font-size: 12px; margin: 16px 0 0; }
+.admin-panel.store .btn { background: var(--surface) !important; color: var(--ink) !important; border: 1px solid var(--line) !important; border-radius: 4px !important; font: inherit !important; padding: 7px 12px !important; }
+.admin-panel.store .admin-guardar, .admin-panel.store .btn-danger, .admin-panel.store .btn-success { background: var(--accent) !important; color: var(--button) !important; border-color: var(--accent) !important; }
+.admin-panel.store .btn:hover:not(:disabled) { filter: brightness(.95); }
+.admin-panel.store .btn:disabled { opacity: .45; cursor: not-allowed; }
+.admin-dialogo { width: min(440px, calc(100% - 32px)); max-height: calc(100dvh - 32px); overflow-y: auto; background: var(--surface); color: var(--ink); border: 1px solid var(--line) !important; border-radius: 5px; padding: 24px; text-align: left; }
+.admin-dialogo::backdrop { background: rgb(20 16 13 / 60%); }
+.admin-panel.store .admin-dialogo h2 { margin-bottom: 20px; }
+.admin-campos { display: grid; gap: 16px; }
+.admin-dialogo .form-label { font-size: 12px; }
+.admin-panel.store .form-control { background-color: var(--surface); color: var(--ink); border: 1px solid var(--line) !important; font: inherit; border-radius: 4px; }
+.admin-panel.store .form-control[aria-invalid='true'] { border: 2px solid var(--accent) !important; }
+.admin-panel.store .invalid-feedback { color: var(--ink); }
+.admin-dialogo-acciones { display: flex; flex-wrap: wrap; gap: 10px; justify-content: flex-end; margin-top: 24px; }
+.admin-panel.store .alert-success { background: var(--soft); color: var(--ink) !important; border: 1px solid var(--line) !important; border-radius: 4px; font-size: 13px; margin-bottom: 20px; }
+.admin-panel :focus-visible { outline: 3px solid var(--accent) !important; outline-offset: 3px; }
+.admin-panel.store[data-theme='vintage'] h2 { font-variant: small-caps !important; letter-spacing: .8px !important; }
+.admin-panel.store[data-theme='pastel'] .admin-lista, .admin-panel.store[data-theme='pastel'] .admin-dialogo { border-radius: 18px; }
+@media (max-width: 600px) { .admin-panel.store { width: calc(100% - 20px); margin: 16px auto; padding: 18px; } .admin-lista { padding: 14px; } }

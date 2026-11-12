@@ -1,0 +1,71 @@
+.site-nav {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 16px 28px;
+  padding: 20px 24px;
+}
+.site-nav a { display: inline-block; padding: 6px 0; }
+.admin-shell.store {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  border: 0 !important;
+  border-radius: 0;
+}
+.admin-shell > main { flex: 1; min-width: 0; }
+.admin-shell .site-nav {
+  background: var(--surface);
+  color: var(--ink);
+  border-bottom: 1px solid var(--line) !important;
+}
+.admin-shell .site-nav a { color: var(--ink); text-decoration: none; }
+.admin-shell .site-nav a:hover { text-decoration: underline; text-underline-offset: 5px; }
+.admin-shell .site-nav span { color: var(--muted); font-size: 13px; }
+.admin-shell .site-nav button { border-color: var(--line) !important; }
+.admin-shell .site-footer {
+  background: var(--surface);
+  padding: 20px 24px;
+  border-top: 1px solid var(--line) !important;
+  text-align: center;
+  font-size: 12px;
+}
+.admin-shell .site-footer p { color: var(--muted) !important; }
+/* El fondo exterior acompaña el tema sin cambiar las otras vistas. */
+body:has(.admin-shell) { background: #faf7f0 !important; }
+body:has(.admin-shell[data-theme='oscuro']) { background: #211b17 !important; }
+body:has(.admin-shell[data-theme='vintage']) { background: #eee2c9 !important; }
+body:has(.admin-shell[data-theme='pastel']) { background: #fcf5f0 !important; }
+#root:has(.admin-shell) { border: 0; }
+@media (max-width: 600px) {
+  .site-nav { gap: 12px 22px; padding: 16px; }
+}
+
+/* Estilo compartido por todas las vistas; variables del sprint 1 en wireframe.css. */
+.site-shell.store { overflow: visible; }
+.site-shell h1, .site-shell h2, .site-shell h3 { color: var(--ink); font-family: Georgia, 'Times New Roman', serif; font-weight: 400; }
+.site-shell .site-nav { gap: 16px 28px; }
+.site-theme { display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--muted); }
+.site-shell .site-theme select { padding: 6px 10px; }
+.site-shell .site-page { padding: 40px 28px; }
+.site-shell .site-page > h1 { padding: 24px; border: 1px solid var(--line); background: var(--surface); }
+.site-shell .site-page .container { max-width: 960px; }
+.site-shell .site-page h1 { font-size: clamp(30px, 4vw, 44px); }
+.site-shell .site-page form { padding: 24px; background: var(--surface); border: 1px solid var(--line); border-radius: 5px; text-align: left; }
+.site-shell .form-control { background-color: var(--surface); color: var(--ink); border: 1px solid var(--line); }
+.site-shell .form-control:focus { background-color: var(--surface); color: var(--ink); border-color: var(--accent); box-shadow: 0 0 0 2px var(--soft); }
+.site-shell .form-label { font-size: 13px; }
+.site-shell .btn-primary, .site-shell .btn-producto { background: var(--accent); border-color: var(--accent); color: var(--button); }
+.site-shell .btn-primary:hover, .site-shell .btn-producto:hover { background: var(--accent); color: var(--button); filter: brightness(.95); }
+.site-shell .alert-danger, .site-shell .invalid-feedback { color: var(--ink); }
+.site-shell .alert-danger { background: var(--soft); border-color: var(--line); }
+.site-shell .form-control.is-invalid { border: 2px solid var(--accent); }
+.site-shell.store .hero { display: block; }
+.site-shell .hero .titulo, .site-shell .titulo-productos-destacados h2, .site-shell .nombre-producto { font-weight: 400 !important; }
+.site-shell .tarjeta-producto { border: 1px solid var(--line); border-radius: 5px; }
+.site-shell[data-theme='pastel'] .tarjeta-producto, .site-shell[data-theme='pastel'] .site-page form { border-radius: 18px; }
+.site-shell[data-theme='vintage'] h2, .site-shell[data-theme='vintage'] h3 { font-variant: small-caps; letter-spacing: .8px; }
+.site-shell .ver-detalles { opacity: 1; color: var(--muted) !important; }
+.site-shell .btn-hero { background: var(--accent); color: var(--button); border: 1px solid var(--accent); }
+@media (max-width: 600px) { .site-shell .site-page { padding: 24px 16px; } .site-shell .site-page form { padding: 18px; } }
