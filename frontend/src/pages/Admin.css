@@ -45,6 +45,10 @@
 .admin-panel.store .form-control[aria-invalid='true'] { border: 2px solid var(--accent) !important; }
 .admin-panel.store .invalid-feedback { color: var(--ink); }
 .admin-dialogo-acciones { display: flex; flex-wrap: wrap; gap: 10px; justify-content: flex-end; margin-top: 24px; }
+.admin-detalle { overflow-wrap: anywhere; }
+.admin-detalle dt { color: var(--muted); font-size: 12px; margin-top: 14px; }
+.admin-detalle dd { margin: 4px 0; }
+.admin-panel.store .alert-danger { background: var(--soft); color: var(--ink); border: 1px solid var(--line); }
 .admin-panel.store .alert-success { background: var(--soft); color: var(--ink) !important; border: 1px solid var(--line) !important; border-radius: 4px; font-size: 13px; margin-bottom: 20px; }
 .admin-panel :focus-visible { outline: 3px solid var(--accent) !important; outline-offset: 3px; }
 .admin-panel.store[data-theme='vintage'] h2 { font-variant: small-caps !important; letter-spacing: .8px !important; }
