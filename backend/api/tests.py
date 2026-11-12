@@ -30,6 +30,50 @@ class PanelAdminTests(APITestCase):
         self.assertEqual(roles[self.otro_admin.pk], 'admin')
         self.assertNotIn('password', response.data['usuarios'][0])
 
+    def test_suspender_cliente_y_otro_administrador(self):
+        self.client.force_authenticate(self.admin)
+        for usuario in [self.cliente, self.otro_admin]:
+            with self.subTest(usuario=usuario.username):
+                url = reverse('suspender_usuario_admin', args=[usuario.pk])
+                self.assertEqual(self.client.post(url).status_code, 200)
+                usuario.refresh_from_db()
+                self.assertFalse(usuario.is_active)
+                self.assertTrue(get_user_model().objects.filter(pk=usuario.pk).exists())
+                self.assertEqual(self.client.post(url).status_code, 200)
+
+    def test_suspension_restringida_y_cuenta_propia_protegida(self):
+        url = reverse('suspender_usuario_admin', args=[self.otro_admin.pk])
+        self.assertEqual(self.client.post(url).status_code, 403)
+        self.client.force_authenticate(self.cliente)
+        self.assertEqual(self.client.post(url).status_code, 403)
+        self.client.force_authenticate(self.admin)
+        propia = reverse('suspender_usuario_admin', args=[self.admin.pk])
+        self.assertEqual(self.client.post(propia).status_code, 403)
+        self.admin.refresh_from_db()
+        self.assertTrue(self.admin.is_active)
+        self.assertEqual(self.editar(self.cliente, {'is_active': False}).status_code, 400)
+
+    def test_administrador_suspendido_pierde_acceso_y_sesion(self):
+        session_client = APIClient()
+        session_client.force_login(self.otro_admin)
+        self.assertEqual(session_client.get(self.lista).status_code, 200)
+        self.client.force_authenticate(self.admin)
+        url = reverse('suspender_usuario_admin', args=[self.otro_admin.pk])
+        self.assertEqual(self.client.post(url).status_code, 200)
+        self.assertEqual(session_client.get(self.lista).status_code, 403)
+        self.otro_admin.refresh_from_db()
+        self.client.force_authenticate(self.otro_admin)
+        self.assertEqual(self.client.get(self.lista).status_code, 403)
+        self.assertEqual(self.client.post(reverse('suspender_usuario_admin', args=[self.cliente.pk])).status_code, 403)
+
+    def test_suspension_requiere_csrf_y_usuario_existente(self):
+        client = APIClient(enforce_csrf_checks=True)
+        client.force_login(self.admin)
+        url = reverse('suspender_usuario_admin', args=[self.cliente.pk])
+        self.assertEqual(client.post(url).status_code, 403)
+        token = client.get(self.lista).data['csrf_token']
+        self.assertEqual(client.post(url, HTTP_X_CSRFTOKEN=token).status_code, 200)
+        self.assertEqual(client.post(reverse('suspender_usuario_admin', args=[999999]), HTTP_X_CSRFTOKEN=token).status_code, 404)
     def test_editar_cliente_y_otro_admin(self):
         self.client.force_authenticate(self.admin)
         for usuario in [self.cliente, self.otro_admin]:
@@ -52,6 +96,39 @@ class PanelAdminTests(APITestCase):
             with self.subTest(datos=datos):
                 self.assertEqual(self.editar(self.otro_admin, datos).status_code, 400)
         self.assertEqual(self.editar(self.cliente, {'email': self.cliente.email}).status_code, 200)
+
+    def test_reactivar_cliente_y_admin_conserva_datos_y_rol(self):
+        self.client.force_authenticate(self.admin)
+        for usuario in [self.cliente, self.otro_admin]:
+            with self.subTest(usuario=usuario.username):
+                self.client.post(reverse('suspender_usuario_admin', args=[usuario.pk]))
+                response = self.client.post(reverse('activar_usuario_admin', args=[usuario.pk]))
+                self.assertEqual(response.status_code, 200)
+                usuario.refresh_from_db()
+                self.assertTrue(usuario.is_active)
+                self.assertEqual(response.data['email'], usuario.email)
+                self.assertEqual(response.data['rol'], 'admin' if usuario.is_staff else 'cliente')
+        session_client = APIClient()
+        session_client.force_login(self.otro_admin)
+        self.assertEqual(session_client.get(self.lista).status_code, 200)
+
+    def test_activacion_restringida_y_requiere_csrf(self):
+        url = reverse('activar_usuario_admin', args=[self.cliente.pk])
+        self.assertEqual(self.client.post(url).status_code, 403)
+        self.client.force_authenticate(self.cliente)
+        self.assertEqual(self.client.post(url).status_code, 403)
+        self.client.force_authenticate(self.admin)
+        self.assertEqual(self.client.post(reverse('activar_usuario_admin', args=[self.admin.pk])).status_code, 403)
+        self.assertEqual(self.client.post(reverse('activar_usuario_admin', args=[999999])).status_code, 404)
+        client = APIClient(enforce_csrf_checks=True)
+        client.force_login(self.admin)
+        self.assertEqual(client.post(url).status_code, 403)
+        token = client.get(self.lista).data['csrf_token']
+        self.assertEqual(client.post(url, HTTP_X_CSRFTOKEN=token).status_code, 200)
+        self.otro_admin.is_active = False
+        self.otro_admin.save(update_fields=['is_active'])
+        self.client.force_authenticate(self.otro_admin)
+        self.assertEqual(self.client.post(url).status_code, 403)
 
     def test_sesion_requiere_csrf_para_guardar(self):
         client = APIClient(enforce_csrf_checks=True)

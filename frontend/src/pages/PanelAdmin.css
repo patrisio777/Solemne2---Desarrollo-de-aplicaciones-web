@@ -42,4 +42,15 @@ body:has(.panel-admin) footer { padding: 20px; background: #fbf8f3; border-top: 
 .panel-acciones button[type=submit] { background: #65452f; color: #fff; }
 .panel-acciones button[type=submit]:hover:not(:disabled) { background: #7d5537; }
 .panel-error { color: #9b2d28; font-size: 14px; }
+.panel-acciones-fila { display: flex; gap: 8px; flex-wrap: wrap; }
+.panel-estado { font-size: 12px; white-space: nowrap; }
+.panel-estado.activa { color: #55613e; }
+.panel-estado.suspendida { color: #9b4031; background: #f9e9e1; padding: 4px 8px; border-radius: 16px; }
+.panel-admin .panel-boton-suspender:not(:disabled) { color: #913e30; border-color: #d9b6a5; }
+.panel-admin .panel-boton-suspender:hover:not(:disabled) { background: #faeee7; }
+.panel-admin .panel-boton-activar { color: #55613e; border-color: #b8bea6; background: #f4f5ec; }
+.panel-admin .panel-boton-activar:hover:not(:disabled) { background: #e9eddf; }
+.panel-cuenta-confirmacion { background: #eee5da; padding: 16px; border-radius: 6px; margin: 20px 0; overflow-wrap: anywhere; }
+.panel-acciones .panel-confirmar-suspension[type=submit] { background: #913e30; }
+.panel-acciones .panel-confirmar-suspension[type=submit]:hover:not(:disabled) { background: #773126; }
 @media (max-width: 640px) { .panel-admin { padding: 28px 16px; } .panel-admin h1 { font-size: 34px; } .panel-cabecera { align-items: flex-start; flex-direction: column; gap: 12px; } .panel-filtros { grid-template-columns: 1fr; } .panel-resumen > div { padding-left: 12px; } .panel-resumen span { font-size: 12px; } .panel-admin th, .panel-admin td { padding: 12px; } }

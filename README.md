@@ -281,6 +281,14 @@ filtrar por tipo de cuenta y editar nombre, apellido y correo electrónico.
 La cuenta conectada no se puede editar desde este panel. El servidor impide
 cambiar roles, nombres de usuario y contraseñas.
 
+Cada cuenta muestra su estado y un botón **Suspender**. La confirmación identifica
+al usuario y explica que perderá el acceso conservando sus datos. La suspensión
+usa `is_active=False` de Django, bloqueando nuevos inicios de sesión y el acceso
+con sesiones existentes. Se pueden suspender clientes y otros administradores;
+la cuenta propia está protegida en la pantalla y en el servidor. Las cuentas
+suspendidas muestran **Activar cuenta**; al pulsarlo vuelven al estado activo
+y recuperan el acceso sin cambiar sus datos ni su tipo de cuenta.
+
 1. Preparar el backend siguiendo `backend/instalar_dependencias.md`.
 2. Crear una cuenta administrativa con `python manage.py createsuperuser`.
 3. Iniciar Django con `python manage.py runserver`.

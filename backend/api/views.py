@@ -160,3 +160,24 @@ def update_user(request, user_id):
         "message": f"Usuario con ID {user_id} actualizado correctamente"
     })
 
+
+@api_view(['POST'])
+@permission_classes([EsAdministrador])
+def suspender_usuario_admin(request, pk):
+    if pk == request.user.pk:
+        return Response({'detail': 'No puedes suspender tu propia cuenta.'}, status=403)
+    usuario = get_object_or_404(get_user_model(), pk=pk)
+    usuario.is_active = False
+    usuario.save(update_fields=['is_active'])
+    return Response(UsuarioSerializer(usuario).data)
+
+
+@api_view(['POST'])
+@permission_classes([EsAdministrador])
+def activar_usuario_admin(request, pk):
+    if pk == request.user.pk:
+        return Response({'detail': 'No puedes cambiar el estado de tu propia cuenta desde este panel.'}, status=403)
+    usuario = get_object_or_404(get_user_model(), pk=pk)
+    usuario.is_active = True
+    usuario.save(update_fields=['is_active'])
+    return Response(UsuarioSerializer(usuario).data)

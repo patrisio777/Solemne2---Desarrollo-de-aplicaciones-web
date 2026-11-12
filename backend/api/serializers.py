@@ -7,8 +7,8 @@ class UsuarioSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = get_user_model()
-        fields = ['id', 'username', 'first_name', 'last_name', 'email', 'rol']
-        read_only_fields = ['id', 'username', 'rol']
+        fields = ['id', 'username', 'first_name', 'last_name', 'email', 'rol', 'is_active']
+        read_only_fields = ['id', 'username', 'rol', 'is_active']
         extra_kwargs = {
             'first_name': {'required': True, 'allow_blank': False},
             'last_name': {'required': True, 'allow_blank': False},

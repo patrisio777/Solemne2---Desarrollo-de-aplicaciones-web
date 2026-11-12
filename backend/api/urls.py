@@ -5,6 +5,8 @@ from . import auth_views
 urlpatterns = [
     path('admin/usuarios/', views.usuarios_admin, name='usuarios_admin'),
     path('admin/usuarios/<int:pk>/', views.editar_usuario_admin, name='editar_usuario_admin'),
+    path('admin/usuarios/<int:pk>/suspender/', views.suspender_usuario_admin, name='suspender_usuario_admin'),
+    path('admin/usuarios/<int:pk>/activar/', views.activar_usuario_admin, name='activar_usuario_admin'),
     path('test/', views.test_endpoint, name='test_endpoint'),
     path('db-status/', views.db_status_endpoint, name='db_status_endpoint'),
     path('health/', views.db_status_endpoint, name='health_endpoint'),

@@ -16,6 +16,13 @@ export default function PanelAdmin() {
   const [guardando, setGuardando] = useState(false)
   const dialogo = useRef(null)
   const botonEdicion = useRef(null)
+  const [suspension, setSuspension] = useState(null)
+  const [errorSuspension, setErrorSuspension] = useState('')
+  const [suspendiendo, setSuspendiendo] = useState(false)
+  const dialogoSuspension = useRef(null)
+  const botonSuspension = useRef(null)
+  const [activando, setActivando] = useState(null)
+  const [errorActivacion, setErrorActivacion] = useState('')
 
   useEffect(() => {
     const controller = new AbortController()
@@ -92,6 +99,66 @@ export default function PanelAdmin() {
     }
   }
 
+  function abrirSuspension(usuario, boton) {
+    if (usuario.id === actual || !usuario.is_active) return
+    botonSuspension.current = boton
+    setSuspension(usuario)
+    setErrorSuspension('')
+    dialogoSuspension.current.showModal()
+  }
+
+  function cerrarSuspension() {
+    if (suspendiendo) return
+    dialogoSuspension.current.close()
+    setSuspension(null)
+    setErrorSuspension('')
+    botonSuspension.current?.focus()
+  }
+
+  async function suspender(event) {
+    event.preventDefault()
+    if (!suspension || suspension.id === actual || suspendiendo) return
+    setSuspendiendo(true)
+    setErrorSuspension('')
+    try {
+      const response = await fetch(`${endpoint}${suspension.id}/suspender/`, {
+        method: 'POST', credentials: 'same-origin',
+        headers: { 'X-CSRFToken': token },
+      })
+      const data = await response.json()
+      if (!response.ok) throw new Error(data.detail || 'No se pudo suspender la cuenta. Intenta nuevamente.')
+      setUsuarios(prev => prev.map(usuario => usuario.id === data.id ? data : usuario))
+      setMensaje(`La cuenta de ${`${data.first_name} ${data.last_name}`.trim() || data.username} fue suspendida.`)
+      dialogoSuspension.current.close()
+      setSuspension(null)
+      botonSuspension.current?.focus()
+    } catch (error) {
+      setErrorSuspension(error instanceof SyntaxError ? 'El servidor no respondió correctamente. Intenta nuevamente.' : error.message)
+    } finally {
+      setSuspendiendo(false)
+    }
+  }
+
+  async function activar(usuario) {
+    if (usuario.id === actual || usuario.is_active || activando !== null) return
+    setActivando(usuario.id)
+    setErrorActivacion('')
+    try {
+      const response = await fetch(`${endpoint}${usuario.id}/activar/`, {
+        method: 'POST', credentials: 'same-origin',
+        headers: { 'X-CSRFToken': token },
+      })
+      const data = await response.json()
+      if (!response.ok) throw new Error(data.detail || 'No se pudo activar la cuenta. Intenta nuevamente.')
+      setUsuarios(prev => prev.map(item => item.id === data.id ? data : item))
+      setMensaje(`La cuenta de ${`${data.first_name} ${data.last_name}`.trim() || data.username} fue activada.`)
+    } catch (error) {
+      setErrorActivacion(error instanceof SyntaxError ? 'El servidor no respondió correctamente. Intenta nuevamente.' : error.message)
+    } finally {
+      setActivando(null)
+    }
+  }
+
   return (
     <section className="panel-admin" aria-labelledby="panel-titulo">
       <header className="panel-cabecera">
@@ -125,19 +192,23 @@ export default function PanelAdmin() {
             <option value="todos">Todas las cuentas</option><option value="cliente">Clientes</option><option value="admin">Administradores</option>
           </select></label>
         </div>
-        <p className="panel-nota">Tu cuenta aparece en la lista, pero no puede editarse desde este panel.</p>
+        <p className="panel-nota">Tu cuenta aparece en la lista, pero no puede editarse ni suspenderse desde este panel.</p>
         <p className="panel-mensaje" role="status">{mensaje}</p>
+        {errorActivacion && <p className="panel-error" role="alert">{errorActivacion}</p>}
         <div className="panel-tabla">
           <table>
             <caption>{visibles.length} {visibles.length === 1 ? 'usuario encontrado' : 'usuarios encontrados'}</caption>
-            <thead><tr><th scope="col">Usuario</th><th scope="col">Correo electrónico</th><th scope="col">Tipo de cuenta</th><th scope="col">Acciones</th></tr></thead>
+            <thead><tr><th scope="col">Usuario</th><th scope="col">Correo electrónico</th><th scope="col">Tipo de cuenta</th><th scope="col">Estado</th><th scope="col">Acciones</th></tr></thead>
             <tbody>{visibles.map(usuario => <tr key={usuario.id}>
               <td><strong>{`${usuario.first_name} ${usuario.last_name}`.trim() || usuario.username}</strong><small>@{usuario.username}{usuario.id === actual && ' · Tu cuenta'}</small></td>
               <td>{usuario.email || 'Sin correo registrado'}</td>
               <td><span className={`panel-rol ${usuario.rol}`}>{usuario.rol === 'admin' ? 'Administrador' : 'Cliente'}</span></td>
-              <td><button disabled={usuario.id === actual} onClick={e => abrir(usuario, e.currentTarget)} aria-label={`Editar datos de ${usuario.username}`}>
+              <td><span className={`panel-estado ${usuario.is_active ? 'activa' : 'suspendida'}`}>{usuario.is_active ? 'Activa' : 'Suspendida'}</span></td>
+              <td><div className="panel-acciones-fila"><button disabled={usuario.id === actual} onClick={e => abrir(usuario, e.currentTarget)} aria-label={`Editar datos de ${usuario.username}`}>
                 {usuario.id === actual ? 'Tu cuenta' : 'Editar datos'}
-              </button></td>
+              </button><button className={usuario.is_active ? 'panel-boton-suspender' : 'panel-boton-activar'} disabled={usuario.id === actual || activando !== null} onClick={e => usuario.is_active ? abrirSuspension(usuario, e.currentTarget) : activar(usuario)} aria-label={`${usuario.is_active ? 'Suspender' : 'Activar'} cuenta de ${usuario.username}`}>
+                {activando === usuario.id ? 'Activando…' : usuario.is_active ? 'Suspender' : 'Activar cuenta'}
+              </button></div></td>
             </tr>)}</tbody>
           </table>
           {visibles.length === 0 && <p className="panel-vacio">{usuarios.length === 0 ? 'Todavía no hay usuarios registrados.' : 'No hay usuarios que coincidan con tu búsqueda.'}</p>}
@@ -155,6 +226,17 @@ export default function PanelAdmin() {
           </fieldset>
           {error && <p className="panel-error" role="alert">{error}</p>}
           <div className="panel-acciones"><button type="button" disabled={guardando} onClick={cerrar}>Cancelar</button><button type="submit" disabled={guardando}>{guardando ? 'Guardando…' : 'Guardar cambios'}</button></div>
+        </form>}
+      </dialog>
+
+      <dialog ref={dialogoSuspension} className="panel-dialogo" aria-labelledby="suspender-titulo" aria-describedby="suspender-descripcion" onCancel={e => { e.preventDefault(); cerrarSuspension() }}>
+        {suspension && <form onSubmit={suspender}>
+          <p className="panel-etiqueta">Confirmación de suspensión</p>
+          <h2 id="suspender-titulo">¿Suspender esta cuenta?</h2>
+          <p className="panel-cuenta-confirmacion"><strong>{`${suspension.first_name} ${suspension.last_name}`.trim() || suspension.username}</strong><br />{suspension.email}<br />{suspension.rol === 'admin' ? 'Administrador' : 'Cliente'}</p>
+          <p id="suspender-descripcion">Esta persona perderá el acceso a su cuenta{ suspension.rol === 'admin' ? ' y al panel de administración' : '' }. Sus datos se conservarán.</p>
+          {errorSuspension && <p className="panel-error" role="alert">{errorSuspension}</p>}
+          <div className="panel-acciones"><button autoFocus type="button" disabled={suspendiendo} onClick={cerrarSuspension}>Cancelar</button><button type="submit" className="panel-confirmar-suspension" disabled={suspendiendo}>{suspendiendo ? 'Suspendiendo…' : 'Confirmar suspensión'}</button></div>
         </form>}
       </dialog>
     </section>

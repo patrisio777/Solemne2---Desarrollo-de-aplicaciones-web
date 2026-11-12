@@ -1,0 +1,137 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Wireframe · Paraíso del Café</title>
+<link rel="stylesheet" href="src/wireframe.css">
+<style>
+*{box-sizing:border-box}
+body{margin:0;padding:24px;background:#e8e2d9;color:#38271e;font:14px/1.5 'Trebuchet MS','Segoe UI',sans-serif}
+.demo-bar{max-width:1290px;margin:0 auto 14px;display:flex;justify-content:space-between;align-items:flex-end;gap:16px;flex-wrap:wrap}
+.demo-bar h1{margin:0;font:400 24px/1.2 Georgia,serif}
+.demo-bar p{margin:5px 0 0;color:#75675c;font-size:12px}
+.demo-code{font:12px/1.4 Consolas,monospace;background:#fffdf9;border:1px solid #d9cdbf;border-radius:4px;padding:6px 9px}
+.demo-tools{max-width:1290px;margin:0 auto 14px;display:flex;flex-wrap:wrap;align-items:center;gap:6px}
+.demo-tools button,.demo-tools select{font:inherit;padding:7px 11px;color:#38271e;background:#fffdf9;border:1px solid #c8b6a5;border-radius:4px;cursor:pointer}
+.demo-tools button{display:flex;align-items:center;gap:7px}
+.demo-tools button small{opacity:.65}
+.demo-tools button[aria-current="true"]{background:#38271e;color:#fff9ef;border-color:#38271e}
+.demo-tools .sep{width:1px;height:26px;background:#c8b6a5;margin:0 8px}
+.demo-frame{max-width:1290px;margin:0 auto}
+.demo-frame .store{min-height:560px}
+@media (max-width:600px){body{padding:12px}.demo-tools .sep{display:none}}
+</style>
+</head>
+<body>
+<div class="demo-bar">
+  <div>
+    <h1>Wireframe · Paraíso del Café</h1>
+    <p>Diez páginas · un mismo recorrido — CSS: frontend/src/wireframe.css</p>
+  </div>
+  <code class="demo-code">&lt;div class="store wire"&gt;</code>
+</div>
+
+<div class="demo-tools" id="tools">
+  <nav id="pages" style="display:flex;flex-wrap:wrap;gap:6px" aria-label="Diez páginas"></nav>
+  <span class="sep"></span>
+  <label style="display:flex;align-items:center;gap:8px;font-size:13px">Apariencia
+    <select id="appearance">
+      <option value="wire">Boceto estructural</option>
+      <option value="claro">Claro</option>
+      <option value="oscuro">Oscuro</option>
+      <option value="vintage">Vintage</option>
+      <option value="pastel">Pastel</option>
+    </select>
+  </label>
+</div>
+
+<div class="demo-frame">
+  <div class="store wire" data-theme="claro" id="preview"></div>
+</div>
+
+<script>
+const symbol = "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 80 90\" fill=\"none\" role=\"img\" aria-label=\"Granos de café bajo una palmera\"><g stroke=\"currentColor\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M43 27c-3 15-7 26-8 38M48 28c-2 15-4 26-4 37\" stroke-width=\"3\"/><path d=\"M45 27C32 11 18 13 9 27c14-7 24-5 36 0ZM45 27C34 6 21 4 15 11c14 0 24 6 30 16ZM45 27C47 8 62 6 72 17c-13-3-20 1-27 10ZM45 27C61 16 74 26 76 38c-11-8-18-10-31-11ZM45 27C32 22 20 30 19 41c8-7 17-10 26-14Z\" stroke-width=\"2.4\"/><path d=\"M40 36l5 2M38 44l5 2M36 52l5 2\" stroke-width=\"1.5\"/><ellipse cx=\"40\" cy=\"74\" rx=\"13\" ry=\"10\" transform=\"rotate(-20 40 74)\" stroke-width=\"2.8\"/><path d=\"M28 79c7-10 13 2 24-10\" stroke-width=\"2.3\"/><ellipse cx=\"20\" cy=\"77\" rx=\"9\" ry=\"6\" transform=\"rotate(28 20 77)\" stroke-width=\"2.5\"/><path d=\"M12 73c8 0 6 9 16 8\" stroke-width=\"2\"/><ellipse cx=\"60\" cy=\"76\" rx=\"9\" ry=\"6\" transform=\"rotate(-35 60 76)\" stroke-width=\"2.5\"/><path d=\"M53 81c3-8 9 0 14-10\" stroke-width=\"2\"/></g></svg>";
+
+const pages = [
+  ['Inicio', '/', 'Entrada y descubrimiento'],
+  ['Catálogo', '/catalogo', 'Explorar y filtrar productos'],
+  ['Detalle de producto', '/producto/:id', 'Elegir formato y agregar al carrito'],
+  ['Carrito', '/carrito', 'Revisar productos y total'],
+  ['Iniciar sesión', '/login', 'Acceder antes de finalizar la compra'],
+  ['Registro', '/registro', 'Crear cuenta'],
+  ['Pago', '/pago', 'Entrega, pago y revisión'],
+  ['Confirmación', '/confirmacion', 'Resultado de la compra'],
+  ['Contacto', '/contacto', 'Canales y formulario de consulta'],
+  ['Quiénes somos', '/quienes-somos', 'Historia y valores de la cafetería']
+];
+
+const art = (text, cls) => `<div class="art ${cls || ''}"><div class="cup" aria-hidden="true"></div><span class="art-caption">${text}</span></div>`;
+const button = (text, page, primary) => `<button data-page="${page}" class="${primary ? 'primary' : ''}">${text}</button>`;
+const field = (name, type) => `<label>${name}<input type="${type || 'text'}" placeholder="${name}"></label>`;
+const summary = (cta, page) => `<aside class="summary"><h3>Resumen del pedido</h3><p><span>Productos (2)</span><strong>$14.400</strong></p><p><span>Retiro en cafetería</span><span>Sin costo</span></p><hr style="border:0;border-top:1px solid var(--line)"><p><strong>Total</strong><strong>$14.400</strong></p>${button(cta, page, true)}</aside>`;
+
+const hero = (tema) => `<div class="hero"><div>${tema ? '' : '<p class="eyebrow">Café · calma · encuentro</p>'}<h2>Tu camino al paraíso<br>empieza aquí.</h2><p>Encuentra ese café que convertirá tu día a día, en experiencias únicas</p>${button('Explorar cafés', 1, true)}</div>${tema ? '<div class="art"><span class="art-caption">Fotografía del café</span></div>' : art('Fotografía del café')}</div>`;
+
+const products = () => `<div class="products">${[
+  ['Café de la casa', 'Notas de chocolate y caramelo', '$7.200'],
+  ['Origen de temporada', 'Notas suaves y frutales', '$8.900'],
+  ['Blend para espresso', 'Cuerpo intenso y final dulce', '$7.900']
+].map(p => `<article class="product">${art('Fotografía de producto')}<h3>${p[0]}</h3><p>${p[1]}</p><div class="price"><strong>${p[2]}</strong>${button('Ver café', 2)}</div></article>`).join('')}</div>`;
+
+const nav = () => `<header class="store-nav"><div class="store-brand">${symbol}<span>Paraíso del Café</span></div><nav class="store-links" aria-label="Navegación del boceto">${button('Inicio', 0)}${button('Cafés', 1)}${button('Nuestra historia', 9)}${button('Contacto', 8)}${button('Mi cuenta', 4)}${button('Carrito · 2', 3)}</nav></header>`;
+
+const footer = () => `<footer class="store-footer"><span>Paraíso del Café · Un sorbo al paraíso</span><span>${button('Contacto', 8)} ${button('Nuestra historia', 9)}</span></footer>`;
+
+function content(i) {
+  switch (i) {
+    case 0:
+      return hero() + `<div class="block-title"><h3>Favoritos de la casa</h3>${button('Ver todos', 1)}</div>` + products() + `<div class="info-strip"><span>Café seleccionado</span><span>Retiro en cafetería</span><span>Preparado con cuidado</span></div>`;
+    case 1:
+      return `<h2>Encuentra tu café.</h2><p class="prototype-note" style="margin:12px 0">Origen, intensidad y una pausa hecha para ti.</p><div style="display:flex;gap:10px;flex-wrap:wrap;margin:20px 0"><input placeholder="Buscar café" aria-label="Buscar café"><select aria-label="Categoría"><option>Todos los cafés</option></select><select aria-label="Ordenar"><option>Más destacados</option></select></div>` + products() + `<p class="prototype-note">Resultados y paginación / estado sin coincidencias</p>`;
+    case 2:
+      return `<p class="step">Catálogo / Café de la casa</p><div class="hero detail">${art('Fotografía del producto', 'detail-art')}<div><p class="eyebrow">Blend de la casa</p><h2>Café de la casa</h2><strong style="font-size:24px">$7.200</strong><p>Chocolate, caramelo y el sabor de volver a tu lugar favorito.</p><label>Formato<select><option>250 g · Café en grano</option></select></label><label>Cantidad <input style="width:75px" value="1" aria-label="Cantidad"></label><p>Disponibilidad / notas de preparación</p>${button('Agregar y ver carrito', 3, true)}</div></div>`;
+    case 3:
+      return `<h2>Tu carrito</h2><div class="split"><div>${[1, 2].map(() => `<div class="row-item">${art('Producto')}<div><strong>Café de la casa · 250 g</strong><br><small>Cantidad: 1 · $7.200</small></div><button type="button">Eliminar</button></div>`).join('')}${button('Seguir explorando', 1)}</div>${summary('Continuar con mi cuenta', 4)}</div>`;
+    case 4:
+      return `<div class="form"><h2>Qué bueno verte.</h2><p>Ingresa a tu cuenta para continuar.</p>${field('Correo electrónico', 'email')}${field('Contraseña', 'password')}${button('Iniciar sesión y continuar', 6, true)}<p class="prototype-note" style="font-size:12px">Validación / credenciales incorrectas</p>${button('Crear una cuenta', 5)}</div>`;
+    case 5:
+      return `<div class="form"><h2>Tu lugar está aquí.</h2><p>Crea tu cuenta en Paraíso del Café.</p>${field('Nombre y apellido')}${field('Correo electrónico', 'email')}${field('Contraseña', 'password')}${field('Confirmar contraseña', 'password')}<label><input type="checkbox" style="display:inline;width:auto"> Aceptar términos y privacidad</label>${button('Crear cuenta e iniciar sesión', 4, true)}<p class="prototype-note" style="font-size:12px">Validación / correo ya registrado / confirmación</p></div>`;
+    case 6:
+      return `<p class="step">Carrito → Cuenta → <strong>Pago</strong> → Confirmación</p><h2>Último paso, tu próxima pausa.</h2><div class="split"><div class="form" style="width:100%"><h3>Datos de contacto</h3>${field('Nombre completo')}${field('Correo electrónico', 'email')}${field('Teléfono', 'tel')}<label>Entrega<select><option>Retiro en cafetería</option><option>Despacho · dirección requerida</option></select></label><h3>Forma de pago</h3><label><input type="radio" checked style="display:inline;width:auto"> Medio de pago por definir</label><p class="prototype-note" style="color:var(--muted)">Espacio de integración de pago. Validación y error de pago antes de confirmar.</p></div>${summary('Confirmar pedido (boceto)', 7)}</div>`;
+    case 7:
+      return `<div class="success"><div class="check" aria-hidden="true">✓</div><p class="eyebrow">Pedido confirmado</p><h2>Gracias por elegir tu paraíso.</h2><p>Pedido de ejemplo #PC-001<br>Resumen, total y detalles del retiro.</p><div class="summary"><p><span>Cafés de la casa · 2 unidades</span><strong>$14.400</strong></p><p>Recibirás una confirmación en tu correo.</p></div><p>Este es un resultado ilustrativo del flujo.</p>${button('Volver al catálogo', 1, true)}</div>`;
+    case 8:
+      return `<h2>Conversemos con un café.</h2><div class="split"><div><h3>Estamos para ayudarte</h3><p style="margin:18px 0;color:var(--muted)">Espacio para dirección, horario, teléfono y correo reales de la cafetería.</p>${art('Ubicación / mapa')}</div><div class="form" style="width:100%">${field('Nombre')}${field('Correo electrónico', 'email')}<label>Tu mensaje<textarea placeholder="¿En qué podemos ayudarte?"></textarea></label><button class="primary" style="width:100%">Enviar mensaje (boceto)</button><p class="prototype-note" style="font-size:12px">Validación / mensaje enviado / error</p></div></div>`;
+    case 9:
+      return `<div class="hero"><div><p class="eyebrow">Nuestra historia</p><h2>Un lugar para<br>hacer una pausa.</h2><p>Espacio para la historia de Paraíso del Café: origen, equipo y vínculo con sus clientes.</p>${button('Descubrir nuestros cafés', 1, true)}</div>${art('Fotografía del equipo / cafetería')}</div><div class="block-title"><h3>Lo que nos mueve</h3></div><div class="products">${['Calidad en cada taza', 'Cercanía en cada encuentro', 'Cuidado en cada detalle'].map(t => `<article class="product"><h3>${t}</h3><p>Texto breve para desarrollar el valor de la marca.</p></article>`).join('')}</div>`;
+  }
+}
+
+const preview = document.getElementById('preview');
+let current = 0;
+
+function renderPage(i) {
+  current = i;
+  preview.innerHTML = nav() + '<div class="store-body">' + content(i) + '</div>' + footer();
+  document.querySelectorAll('#pages button').forEach((b, j) => b.setAttribute('aria-current', j === i ? 'true' : 'false'));
+}
+
+document.getElementById('pages').innerHTML = pages.map((p, i) => `<button data-goto="${i}"><small>${String(i + 1).padStart(2, '0')}</small>${p[0]}</button>`).join('');
+
+document.getElementById('appearance').addEventListener('change', e => {
+  preview.classList.toggle('wire', e.target.value === 'wire');
+  preview.dataset.theme = e.target.value === 'wire' ? 'claro' : e.target.value;
+});
+
+document.addEventListener('click', e => {
+  const g = e.target.closest('[data-goto]');
+  if (g) renderPage(Number(g.dataset.goto));
+  const p = e.target.closest('[data-page]');
+  if (p) renderPage(Number(p.dataset.page));
+});
+
+renderPage(0);
+</script>
+</body>
+</html>
