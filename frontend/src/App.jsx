@@ -17,16 +17,19 @@ import NoEncontrada from './pages/NoEncontrada'
 import Navbar from './components/Navbar'
 import Footer from './components/Footer'
 import RutaAdmin from './components/RutaAdmin'
+import { ProductosContext, productosIniciales } from './productos'
 
 function App() {
+  const [productos, setProductos] = useState(productosIniciales)
   const [tema, setTema] = useState(() => {
     const guardado = localStorage.getItem('tema')
     return ['claro', 'oscuro', 'vintage', 'pastel'].includes(guardado) ? guardado : 'claro'
   })
   useEffect(() => { localStorage.setItem('tema', tema) }, [tema])
-  const { pathname } = useLocation()
+  const { pathname, search } = useLocation()
   const panel = pathname === '/admin' || pathname.startsWith('/admin/') || pathname.startsWith('/demo/admin')
   return (
+    <ProductosContext.Provider value={{ productos, setProductos }}>
     <div className="store site-shell admin-shell" data-theme={tema}>
       <Navbar tema={tema} onTemaChange={setTema} />
       <main className={panel || pathname === '/' ? undefined : 'site-page'}>
@@ -43,13 +46,14 @@ function App() {
           <Route path="/quienes-somos" element={<QuienesSomos />} />
           <Route path="/admin" element={<RutaAdmin><Admin tema={tema} /></RutaAdmin>} />
           <Route path="/demo/admin" element={<Admin demo tema={tema} />} />
-          <Route path="/admin/productos" element={<RutaAdmin><AdminProductos /></RutaAdmin>} />
-          <Route path="/demo/admin/productos" element={<AdminProductos />} />
+          <Route path="/admin/productos" element={<RutaAdmin><AdminProductos key={pathname + search} /></RutaAdmin>} />
+          <Route path="/demo/admin/productos" element={<AdminProductos key={pathname + search} />} />
           <Route path="*" element={<NoEncontrada />} />
         </Routes>
       </main>
       <Footer />
     </div>
+    </ProductosContext.Provider>
   )
 }
 

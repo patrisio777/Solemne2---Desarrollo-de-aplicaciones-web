@@ -1,22 +1,18 @@
 import { useRef, useState } from 'react'
 import AdminNav from '../components/AdminNav'
-import capuccino from '../assets/capuccino.jpg'
-import mocha from '../assets/mocha.jpg'
+import { Link, useSearchParams } from 'react-router-dom'
+import { useProductos, categorias, pesos } from '../productos'
 import './Admin.css'
 import './AdminProductos.css'
 
 const vacio = { nombre: '', descripcion: '', categoria: '', precio: '', stock: '', imagen: '' }
-const categorias = ['Café', 'Repostería', 'Accesorios']
-const iniciales = [
-  { id: 'capuccino', nombre: 'Capuccino', descripcion: 'Espresso con leche y una suave capa de espuma.', categoria: 'Café', precio: 3800, stock: 20, imagen: capuccino },
-  { id: 'mocha', nombre: 'Mocha', descripcion: 'Café con chocolate y leche.', categoria: 'Café', precio: 4200, stock: 0, imagen: mocha },
-]
-const pesos = new Intl.NumberFormat('es-CL', { style: 'currency', currency: 'CLP' })
 
 export default function AdminProductos() {
-  const [productos, setProductos] = useState(iniciales)
-  const [datos, setDatos] = useState(vacio)
-  const [editando, setEditando] = useState(null)
+  const { productos, setProductos } = useProductos()
+  const [parametros] = useSearchParams()
+  const seleccionado = productos.find(producto => producto.id === parametros.get('editar'))
+  const [datos, setDatos] = useState(() => seleccionado ? { ...seleccionado } : vacio)
+  const [editando, setEditando] = useState(seleccionado?.id || null)
   const [errores, setErrores] = useState({})
   const [mensaje, setMensaje] = useState('')
   const [leyendo, setLeyendo] = useState(false)
@@ -106,7 +102,8 @@ export default function AdminProductos() {
   return <section className="productos-admin" aria-labelledby="productos-titulo">
     <AdminNav />
     <header className="admin-cabecera"><p className="admin-etiqueta">Paraíso del Café / Administración</p><h1 id="productos-titulo">Gestión de productos</h1><p>Registra productos y mantén sus datos, precios e inventario al día.</p></header>
-    <div className="admin-demo"><strong>Modo demostración.</strong> Los productos e imágenes solo se guardan en esta pantalla y se restablecen al recargar.</div>
+    <div className="admin-demo"><strong>Modo demostración.</strong> Los cambios se comparten con el catálogo mientras navegas y se restablecen al recargar. <Link to="/catalogo">Ver catálogo</Link></div>
+    {parametros.has('editar') && !seleccionado && <p className="producto-aviso" role="alert">El producto solicitado no existe. Puedes registrar uno nuevo.</p>}
     <div role="status" aria-live="polite">{mensaje && <p className="producto-aviso">{mensaje}</p>}</div>
     <div className="productos-layout">
       <form ref={formulario} className="producto-form" onSubmit={guardar} noValidate aria-labelledby="producto-form-titulo">
