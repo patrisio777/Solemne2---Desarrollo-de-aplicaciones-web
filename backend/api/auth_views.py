@@ -8,6 +8,11 @@ from rest_framework.authtoken.models import Token
 from django.contrib.auth.password_validation import validate_password
 from django.core.exceptions import ValidationError
 from django.core.validators import validate_email
+from .mongo_collections import registrar_inicio_sesion
+
+
+def _ip_cliente(request):
+    return request.META.get('HTTP_X_FORWARDED_FOR', request.META.get('REMOTE_ADDR'))
 
 
 @api_view(['POST'])
@@ -20,6 +25,7 @@ def registro(request):
     #Normalizar email para evitar mayusculas y espacios
     email = email_crudo.strip().lower() if email_crudo else ''
 
+    #Validar campos obligatorios
     if not email or not password:
         return Response(
             {'error': 'Faltan datos obligatorios (correo y contraseña).'},
@@ -57,7 +63,9 @@ def registro(request):
         email=email, 
         password=password,
         first_name=nombre,
-        last_name=apellido
+        last_name=apellido,
+        is_staff=False,
+        is_superuser=False
         )
 
     #Generamos el token para el usuario recién creado
@@ -87,33 +95,40 @@ def login(request):
             status=status.HTTP_400_BAD_REQUEST
         )
 
+    ip = _ip_cliente(request)
+
     #Comprobar si el usuario existe
     try:
         user_obj = User.objects.get(username=email)
     
     except User.DoesNotExist:
-        #Damos un error por si el usuario no existe
+        #Damos un error por si el usuario no existe (mensaje generico, sin revelar datos)
+        registrar_inicio_sesion(email, exito=False, motivo='usuario_inexistente', ip_origen=ip)
         return Response ({'error': 'Datos incorrectos.'}, status=status.HTTP_401_UNAUTHORIZED)
 
-    #Validar si la cuenta está suspendido
+    #Validar credenciales
+    if not user_obj.check_password(password):
+        registrar_inicio_sesion(email, exito=False, motivo='clave_incorrecta', ip_origen=ip)
+        return Response({'error': 'Datos incorrectos.'}, status=status.HTTP_401_UNAUTHORIZED)
+
+    #Validar si la cuenta está suspendida
     if not user_obj.is_active:
+        registrar_inicio_sesion(email, exito=False, motivo='cuenta_suspendida', ip_origen=ip)
         return Response({'error': 'Esta cuenta se encuentra suspendida.'}, status=status.HTTP_403_FORBIDDEN)
 
-    #Validar que si existe y no está suspendido, la clave sea correcta
-    user = authenticate(username=email, password=password)
-    if user is None:
-        return Response({'error': 'Datos incorrectos.'}, status=status.HTTP_401_UNAUTHORIZED)
+    #Registro de inicio exitoso en MongoDB Atlas (Sprint 2)
+    registrar_inicio_sesion(email, exito=True, ip_origen=ip)
 
     
     #Si todo es correcto, recuperamos su token de acceso
-    token, created = Token.objects.get_or_create(user=user)
+    token, created = Token.objects.get_or_create(user=user_obj)
     return Response({
         'token': token.key,
         'usuario': {
-            'nombre': user.first_name,
-            'apellido': user.last_name,
-            'email': user.email,
-            'es_admin': user.is_staff
+            'nombre': user_obj.first_name,
+            'apellido': user_obj.last_name,
+            'email': user_obj.email,
+            'es_admin': user_obj.is_staff
         }
     }, status=status.HTTP_200_OK)
 

@@ -19,6 +19,44 @@ COLLECTION_LOGS_PAGOS = "logs_pasarela_pagos"
 COLLECTION_CONTACTO = "mensajes_contacto"
 COLLECTION_FICHAS_CAFE = "fichas_tecnicas_cafe"
 COLLECTION_RESENAS = "resenas_productos"
+COLLECTION_LOGS_LOGIN = "logs_inicios_sesion"
+
+
+# ==============================================================================
+# 0. REGISTRO DE INICIOS DE SESIÓN (Sprint 2 - Reglas de seguridad)
+# ==============================================================================
+def registrar_inicio_sesion(email, exito, motivo=None, ip_origen=None):
+    """
+    Registro de intentos de inicio de sesión en MongoDB Atlas (spec Sprint 2:
+    "registro de inicios en MongoDB Atlas").
+
+    Estructura del documento:
+    {
+        "_id": ObjectId(...),
+        "email": "cliente@ejemplo.cl",
+        "exito": true,
+        "motivo": None | "clave_incorrecta" | "cuenta_suspendida" | "usuario_inexistente",
+        "ip_origen": "127.0.0.1",
+        "timestamp": ISODate(...)
+    }
+
+    Best-effort: si MongoDB no está disponible, el login no falla por esto.
+    """
+    db = get_mongo_db()
+    if db is None:
+        return None
+    try:
+        resultado = db[COLLECTION_LOGS_LOGIN].insert_one({
+            "email": email,
+            "exito": bool(exito),
+            "motivo": motivo,
+            "ip_origen": ip_origen,
+            "timestamp": datetime.utcnow(),
+        })
+        return str(resultado.inserted_id)
+    except Exception as exc:  # el auditoria nunca debe tumbar el login
+        print(f"[mongodb] no se pudo registrar el inicio de sesion: {exc}")
+        return None
 
 
 # ==============================================================================

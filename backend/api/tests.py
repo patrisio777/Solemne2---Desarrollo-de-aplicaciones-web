@@ -15,7 +15,8 @@ class PanelAdminTests(APITestCase):
         return self.client.patch(reverse('editar_usuario_admin', args=[usuario.pk]), datos, format='json')
 
     def test_acceso_solo_administradores(self):
-        self.assertEqual(self.client.get(self.lista).status_code, 403)
+        # Sin credenciales DRF responde 401 (esquema Token) antes de evaluar permisos
+        self.assertEqual(self.client.get(self.lista).status_code, 401)
         self.client.force_authenticate(self.cliente)
         self.assertEqual(self.client.get(self.lista).status_code, 403)
         self.assertEqual(self.editar(self.otro_admin, {'first_name': 'Intruso'}).status_code, 403)
@@ -43,7 +44,7 @@ class PanelAdminTests(APITestCase):
 
     def test_suspension_restringida_y_cuenta_propia_protegida(self):
         url = reverse('suspender_usuario_admin', args=[self.otro_admin.pk])
-        self.assertEqual(self.client.post(url).status_code, 403)
+        self.assertEqual(self.client.post(url).status_code, 401)  # sin credenciales
         self.client.force_authenticate(self.cliente)
         self.assertEqual(self.client.post(url).status_code, 403)
         self.client.force_authenticate(self.admin)
@@ -60,7 +61,8 @@ class PanelAdminTests(APITestCase):
         self.client.force_authenticate(self.admin)
         url = reverse('suspender_usuario_admin', args=[self.otro_admin.pk])
         self.assertEqual(self.client.post(url).status_code, 200)
-        self.assertEqual(session_client.get(self.lista).status_code, 403)
+        # La sesion de la cuenta suspendida ya no autentica: DRF responde 401
+        self.assertEqual(session_client.get(self.lista).status_code, 401)
         self.otro_admin.refresh_from_db()
         self.client.force_authenticate(self.otro_admin)
         self.assertEqual(self.client.get(self.lista).status_code, 403)
@@ -114,7 +116,7 @@ class PanelAdminTests(APITestCase):
 
     def test_activacion_restringida_y_requiere_csrf(self):
         url = reverse('activar_usuario_admin', args=[self.cliente.pk])
-        self.assertEqual(self.client.post(url).status_code, 403)
+        self.assertEqual(self.client.post(url).status_code, 401)  # sin credenciales
         self.client.force_authenticate(self.cliente)
         self.assertEqual(self.client.post(url).status_code, 403)
         self.client.force_authenticate(self.admin)

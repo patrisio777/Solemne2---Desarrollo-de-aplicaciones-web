@@ -170,3 +170,71 @@ class PagoTransaccion(models.Model):
 
     def __str__(self):
         return f"pago {self.pasarela} - pedido #{self.pedido_id} - estado: {self.estado}"
+
+
+# ==============================================================================
+# SPRINT 4 BACKEND: TEMA VISUAL ACTIVO Y MENSAJES DE CONTACTO (PostgreSQL)
+# Justificación (spec): "PostgreSQL: usuarios, tema visual activo, mensajes de
+# contacto". Son datos estructurados con validación estricta y baja variabilidad.
+# ==============================================================================
+
+class TemaVisual(models.Model):
+    """
+    Los cuatro temas visuales aprobados (Claro, Oscuro, Vintage, Pastel).
+    Exactamente un tema queda con activo=True: es el tema activo del sitio,
+    persistido en la base de datos (sobrevive reinicios, HU-06 / RF-04).
+    """
+    NOMBRES_APROBADOS = ['claro', 'oscuro', 'vintage', 'pastel']
+
+    nombre = models.SlugField(max_length=20, unique=True, verbose_name="identificador del tema")
+    etiqueta = models.CharField(max_length=40, verbose_name="nombre visible")
+    activo = models.BooleanField(default=False, verbose_name="tema activo del sitio")
+    actualizado_en = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = "tema visual"
+        verbose_name_plural = "temas visuales"
+        ordering = ['nombre']
+
+    def __str__(self):
+        return f"{self.etiqueta} ({'activo' if self.activo else 'inactivo'})"
+
+    @classmethod
+    def garantizar_temas(cls):
+        """Crea los cuatro temas aprobados si no existen y devuelve el activo
+        (o el tema 'claro' por defecto)."""
+        for nombre in cls.NOMBRES_APROBADOS:
+            cls.objects.get_or_create(
+                nombre=nombre,
+                defaults={'etiqueta': nombre.capitalize(), 'activo': nombre == 'claro'}
+            )
+        activo = cls.objects.filter(activo=True).first()
+        if activo is None:
+            activo = cls.objects.filter(nombre='claro').first()
+            if activo is None:
+                activo = cls.objects.create(nombre='claro', etiqueta='Claro', activo=True)
+            else:
+                activo.activo = True
+                activo.save(update_fields=['activo', 'actualizado_en'])
+        return activo
+
+
+class MensajeContacto(models.Model):
+    """
+    Mensaje enviado desde el formulario público de contacto (HU-07 / RF-05).
+    Validaciones de negocio: nombre 2-100 caracteres, correo con formato válido
+    y mensaje de 10 a 2.000 caracteres (validadas en el endpoint).
+    """
+    nombre = models.CharField(max_length=100, verbose_name="nombre del remitente")
+    email = models.EmailField(verbose_name="correo de contacto")
+    mensaje = models.TextField(verbose_name="mensaje")
+    leido = models.BooleanField(default=False, verbose_name="leido por administracion")
+    creado_en = models.DateTimeField(auto_now_add=True, verbose_name="fecha de recepcion")
+
+    class Meta:
+        verbose_name = "mensaje de contacto"
+        verbose_name_plural = "mensajes de contacto"
+        ordering = ['-creado_en']
+
+    def __str__(self):
+        return f"{self.nombre} <{self.email}> - {self.creado_en:%Y-%m-%d}"
